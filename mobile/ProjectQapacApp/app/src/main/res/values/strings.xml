@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">ProjectQapacApp</string>
+    <string name="login">Iniciar sesión</string>
+    <string name="register">Registrarse</string>
+    <string name="guest">Entrar como invitado</string>
+    <string name="welcome">¡Bienvenid@!</string>
+    <string name="bus_welcome_desc">Bus de bienvenida</string>
 </resources>
