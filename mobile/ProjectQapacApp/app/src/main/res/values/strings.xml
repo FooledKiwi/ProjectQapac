@@ -5,7 +5,10 @@
     <string name="guest">Entrar como invitado</string>
     <string name="welcome">¡Bienvenid@!</string>
     <string name="bus_welcome_desc">Bus de bienvenida</string>
+    <string name="image_login_desc">Imagen de iniciar sesión</string>
     <string name="water_marc">© FooledKiwi</string>
+    <string name="text_insert_username">Email / Usuario</string>
+    <string name="text_password">Contraseña</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hola fragment en blanco</string>
     <!-- Strings related to login -->
