@@ -15,5 +15,10 @@
         <item name="android:textColor">@color/black</item>
     </style>
 
+    <style name="TabLayout1" parent="Widget.Material3.TabLayout">
+        <item name="tabMode">auto</item>
+        <item name="tabIndicatorColor">@color/yellow</item>
+    </style>
+
     <style name="Theme.ProjectQapacApp" parent="Base.Theme.ProjectQapacApp" />
 </resources>

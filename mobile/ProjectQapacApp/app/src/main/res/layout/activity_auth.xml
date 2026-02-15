@@ -8,9 +8,11 @@
     tools:context=".AuthActivity">
 
     <com.google.android.material.tabs.TabLayout
-        android:layout_width="404dp"
-        android:layout_height="42dp"
-        android:layout_marginTop="8dp"
+        android:id="@+id/tablay_auth"
+        style="@style/TabLayout1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.428"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,4 +30,13 @@
             android:layout_height="wrap_content"
             android:text="@string/register" />
     </com.google.android.material.tabs.TabLayout>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/vp2_authtab"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tablay_auth" />
 </androidx.constraintlayout.widget.ConstraintLayout>
