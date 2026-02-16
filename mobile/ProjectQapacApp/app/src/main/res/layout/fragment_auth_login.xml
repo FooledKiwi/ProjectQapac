@@ -36,7 +36,6 @@
         android:layout_height="57dp"
         android:layout_marginTop="32dp"
         android:ems="10"
-
         android:hint="@string/prompt_password"
         android:importantForAutofill="no"
         android:inputType="textPassword"
@@ -49,11 +48,11 @@
         style="@style/AppButton2"
         android:layout_width="214dp"
         android:layout_height="64dp"
-        android:layout_marginBottom="76dp"
+        android:layout_marginTop="32dp"
         android:text="@string/action_sign_in_short"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editText_loginPassword" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,14 +6,17 @@
     <string name="welcome">¡Bienvenid@!</string>
     <string name="bus_welcome_desc">Bus de bienvenida</string>
     <string name="image_login_desc">Imagen de iniciar sesión</string>
+    <string name="image_register_desc">Imagen de registarse</string>
     <string name="water_marc">© FooledKiwi</string>
-    <string name="text_insert_username">Email / Usuario</string>
+    <string name="text_insert_username">Email</string>
+    <string name="text_insert_phone">Teléfono</string>
     <string name="text_password">Contraseña</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hola fragment en blanco</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Contraseña</string>
+    <string name="confirm_password">Confirmar Contraseña</string>
     <string name="action_sign_in">Inicia sesión o regístrate</string>
     <string name="action_sign_in_short">Iniciar sesión</string>
     <string name="invalid_username">No es un usuario válido</string>
