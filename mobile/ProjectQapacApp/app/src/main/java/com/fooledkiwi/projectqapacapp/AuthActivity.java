@@ -34,6 +34,10 @@ public class AuthActivity extends AppCompatActivity {
         ViewPager2 viewPager = findViewById(R.id.vp2_authtab);
         TabAuthAdapter adapter = new TabAuthAdapter(this);
         viewPager.setAdapter(adapter);
+        String userType = getIntent().getStringExtra("TAB_POS");
+        if(userType != null && userType.equals("register")) {
+            viewPager.setCurrentItem(1, false);
+        }
 
         new TabLayoutMediator(authTab, viewPager, (tab, pos) -> {
             if (pos == 0) {

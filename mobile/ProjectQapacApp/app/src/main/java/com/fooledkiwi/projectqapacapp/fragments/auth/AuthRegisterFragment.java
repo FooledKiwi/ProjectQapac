@@ -7,6 +7,8 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import com.fooledkiwi.projectqapacapp.R;
 
@@ -58,9 +60,13 @@ public class AuthRegisterFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_auth_register, container, false);
+        View vw = inflater.inflate(R.layout.fragment_auth_register, container, false);
+        Spinner userType = vw.findViewById(R.id.sp_userType);
+        String[] types = {"Selecciona para que usas la app","Soy conductor", "Soy Usuario"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(vw.getContext(), android.R.layout.simple_spinner_dropdown_item, types);
+        userType.setAdapter(adapter);
+        return vw;
     }
 }

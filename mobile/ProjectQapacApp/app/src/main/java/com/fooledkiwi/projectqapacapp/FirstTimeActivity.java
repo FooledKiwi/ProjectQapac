@@ -10,13 +10,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class MainActivity extends AppCompatActivity {
+public class FirstTimeActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_fist_time);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -25,19 +25,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void registerBtn(View vw) {
-        gotoAuth();
+        gotoAuth("register");
     }
 
     public void loginBtn(View vw) {
-        gotoAuth();
+        gotoAuth("login");
     }
 
     public void enterAsGuest(View vw) {
 
     }
 
-    public void gotoAuth() {
+    public void gotoAuth(String action) {
         Intent intent = new Intent(this, AuthActivity.class);
+        intent.putExtra("TAB_POS", action);
         startActivity(intent);
     }
 }

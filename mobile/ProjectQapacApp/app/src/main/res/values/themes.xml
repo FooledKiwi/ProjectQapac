@@ -9,11 +9,13 @@
 
     <style name="AppButton1" parent="Widget.Material3.Button">
         <item name="backgroundTint">@color/purple</item>
+        <item name="background">@drawable/bg_rounded_all</item>
     </style>
 
     <style name="AppButton2" parent="Widget.Material3.Button">
         <item name="backgroundTint">@color/yellow</item>
         <item name="android:textColor">@color/black</item>
+        <item name="background">@drawable/bg_rounded_all</item>
     </style>
 
     <style name="TabLayout1" parent="Widget.Material3.TabLayout">
