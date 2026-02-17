@@ -11,6 +11,9 @@
     <string name="text_insert_username">Email</string>
     <string name="text_insert_phone">Teléfono</string>
     <string name="text_password">Contraseña</string>
+    <string name="explore">Explorar</string>
+    <string name="history">Historial</string>
+    <string name="rating">Calificaciones</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hola fragment en blanco</string>
     <!-- Strings related to login -->
