@@ -6,4 +6,5 @@
     <color name="yellow">#FACA28</color>
     <color name="lightGray">#adadad</color>
     <color name="darkGray">#666666</color>
+    <color name="darkModeContent">#262424</color>
 </resources>

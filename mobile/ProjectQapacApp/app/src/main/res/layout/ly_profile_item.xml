@@ -2,19 +2,86 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/cvContentProfile"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/cvProfile"
+        app:cardCornerRadius="30dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        android:layout_margin="15dp"
+        android:layout_marginStart="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="120dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clText"
+            android:layout_marginStart="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:backgroundTint="@color/white"
+                android:orientation="vertical"
+
+                android:id="@+id/llContentProfile"
+                app:layout_constraintStart_toStartOf="@id/clText"
+                android:layout_marginStart="130dp"
+                android:layout_marginEnd="50dp"
+                app:layout_constraintTop_toTopOf="@id/clText"
+                app:layout_constraintBottom_toBottomOf="@id/clText"
+                android:layout_width="150dp"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/tvFullNameProfile"
+                    android:layout_marginStart="0sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    tools:text="Jr. Emilio Barrantes"
+                    android:layout_marginTop="18sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:textColor="@color/darkGray"
+                    android:id="@+id/tvUsername"
+                    android:layout_marginStart="20sp"
+                    tools:text="lmejia@unc.edu.pe"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+                <ImageView
+                    app:layout_constraintStart_toEndOf="@id/llContentProfile"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:id="@+id/ivIconProfile"
+                    android:backgroundTint="@color/yellow"
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:src="@drawable/icon_user"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </androidx.cardview.widget.CardView>
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cvProfile"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_width="150dp"
-        app:cardCornerRadius="150dp"
-        android:layout_height="150dp">
+        app:cardCornerRadius="200dp"
+        android:layout_width="140dp"
+        android:layout_height="140dp">
 
         <ImageView
             android:id="@+id/img_profile"
+            android:src="@drawable/profile_example"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="match_parent"/>
 
     </androidx.cardview.widget.CardView>
 
