@@ -55,10 +55,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
                     <TextView
+                        android:id="@+id/tvRouteName"
                         android:layout_marginStart="5dp"
-                        tools:text="HOLA BRANDON"
-                        android:textSize="20dp"
-                        android:layout_width="wrap_content"
+                        style="@style/headingTwo"
+                        android:text="@string/txtRouteName"
+                        android:layout_width="155dp"
                         android:layout_height="wrap_content"/>
                     <androidx.cardview.widget.CardView
                         app:cardCornerRadius="10dp"
@@ -78,19 +79,23 @@
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
                 <TextView
+                    android:id="@+id/tvLabelVehicle"
                     android:layout_marginStart="5dp"
-                    tools:text="Placa: HOLAAA LUIIIIS"
+                    android:text="@string/txtVehicleLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
 
             </LinearLayout>
             <CheckBox
-                android:layout_marginStart="20dp"
                 android:id="@+id/btnFavorite"
+                android:layout_height="50dp"
+                android:layout_width="50dp"
+
+                android:buttonTint="@null"
+                android:layout_marginStart="20dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:button="@drawable/selector_favorite"
-                android:layout_width="50dp"
-                android:layout_height="50dp"/>
+                />
         </LinearLayout>
         <LinearLayout
             android:orientation="vertical"
@@ -130,8 +135,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <TextView
+                    android:id="@+id/tvHourArrived"
                     style="@style/TextHourMinutesSeconds"
-                    tools:text="08:00 min"
+                    android:text="@string/txtRestTime"
                     android:textSize="28sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
@@ -157,20 +163,31 @@
             <LinearLayout
                 android:layout_marginStart="15dp"
                 android:orientation="vertical"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <TextView
-                    tools:text="@string/text_location"
+                    android:text="@string/text_location"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <TextView
                     style="@style/TextHourMinutesSeconds"
-                    tools:text="Real Plaza Cajamarca"
-                    android:textSize="28sp"
+                    android:id="@+id/tvCurrentLocation"
+                    android:text="@string/txtCurrentLocation"
+                    android:textSize="22sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
+                <com.google.android.material.imageview.ShapeableImageView
+                    style="@style/CircleImage"
+                    android:layout_marginTop="5dp"
+                    android:id="@+id/ivStopping"
+                    app:shapeAppearanceOverlay="@style/CircleImage"
+                    android:src="@drawable/real_plaza"
+                    android:scaleType="centerCrop"
+                    android:layout_width="match_parent"
+                    android:layout_height="70dp"/>
             </LinearLayout>
+
 
         </LinearLayout>
 

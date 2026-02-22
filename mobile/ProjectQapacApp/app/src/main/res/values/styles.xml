@@ -3,4 +3,10 @@
     <style name="CircleImage">
         <item name="cornerSize">50%</item>
     </style>
+
+    <style name="headingTwo">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
 </resources>

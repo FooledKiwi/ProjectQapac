@@ -26,4 +26,9 @@
     <string name="invalid_username">No es un usuario válido</string>
     <string name="invalid_password">La contraseña debe tener más de 5 caracteres</string>
     <string name="login_failed">"Error al iniciar sesión"</string>
+    <string name="login_success">"Inicio de sesión exitoso"</string>
+<string name="txtRouteName">RUTA P13</string>
+    <string name="txtVehicleLabel">Placa: DCM-15193    </string>
+    <string name="txtRestTime">03:10 min.</string>
+    <string name="txtCurrentLocation">Real Plaza Cajamarca</string>
 </resources>

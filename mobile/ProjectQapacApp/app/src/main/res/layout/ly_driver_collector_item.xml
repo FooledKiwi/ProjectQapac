@@ -32,15 +32,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <TextView
+            android:id="@+id/tvNameAdmin"
             style="@style/headingTwo"
             android:backgroundTint="@color/bone"
-            tools:text="Carlos Rallirgos"
+            android:text="Carlos Rallirgos"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <TextView
             style="@style/txtDescription"
             android:id="@+id/tvRole"
-            tools:text="Conductor Asignado"
+            android:text="Conductor Asignado"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
     </LinearLayout></androidx.constraintlayout.widget.ConstraintLayout>
