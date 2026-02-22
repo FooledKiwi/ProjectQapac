@@ -14,7 +14,9 @@
             android:layout_height="wrap_content"
            android:padding="12dp">
 
-        <com.google.android.material.imageview.ShapeableImageView
+            <com.google.android.material.imageview.ShapeableImageView
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
             android:id="@+id/ivMiniProfile"
             android:src="@drawable/profile_example"
             android:scaleType="centerCrop"

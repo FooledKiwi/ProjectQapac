@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".main.AlertsFragment">
 
     <LinearLayout
@@ -15,8 +16,20 @@
             android:layout_marginStart="5dp"
             style="@style/headingOne"
             android:text="@string/txtCurrentAlerts" />
+        <androidx.cardview.widget.CardView
+            android:backgroundTint="@color/pink"
+            app:cardCornerRadius="10dp"
+            style="@style/CardTextstates">
+
+            <TextView
+                android:id="@+id/tvCountCurrentAlerts"
+                android:textColor="@color/red"
+                android:textStyle="bold"
+                android:layout_marginHorizontal="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/test_txt_alerts"/>
+        </androidx.cardview.widget.CardView>
+
     </LinearLayout>
-
-
-
 </FrameLayout>

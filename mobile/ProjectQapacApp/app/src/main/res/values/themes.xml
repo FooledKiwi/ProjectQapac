@@ -19,10 +19,7 @@
         <item name="android:textColor">@color/darkGray</item>
     </style>
 
-    <style name="txtDescription">
-        <item name="android:textAlignment">textEnd</item>
-        <item name="android:textColor">@color/darkGray</item>
-    </style>
+
 
     <style name="TextHourMinutesSeconds">
         <item name="android:textAlignment">textEnd</item>
