@@ -1,5 +1,6 @@
 package com.fooledkiwi.projectqapacapp.auth;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -8,8 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
 
+import com.fooledkiwi.projectqapacapp.MainActivity;
 import com.fooledkiwi.projectqapacapp.R;
 
 /**
@@ -67,6 +70,12 @@ public class AuthRegisterFragment extends Fragment {
         String[] types = {"Selecciona para que usas la app","Soy conductor", "Soy Usuario"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(vw.getContext(), android.R.layout.simple_spinner_dropdown_item, types);
         userType.setAdapter(adapter);
+
+        Button loginButton = vw.findViewById(R.id.btn_registerConfirm);
+        loginButton.setOnClickListener(v -> {
+            Intent gotoMain = new Intent(vw.getContext(), MainActivity.class);
+            startActivity(gotoMain);
+        });
         return vw;
     }
 }

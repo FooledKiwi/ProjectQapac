@@ -44,7 +44,7 @@
         app:layout_constraintTop_toBottomOf="@+id/editText_loginUser" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/btn_loginConfirm"
         style="@style/AppButton2"
         android:layout_width="214dp"
         android:layout_height="64dp"

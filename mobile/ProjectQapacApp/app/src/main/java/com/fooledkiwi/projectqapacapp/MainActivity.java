@@ -7,6 +7,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.viewpager2.widget.ViewPager2;
+
+import com.fooledkiwi.projectqapacapp.Adapters.auth.BottomMainMenuAdapter;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +23,48 @@ public class MainActivity extends AppCompatActivity {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
+        });
+
+        loadBottomMenuInteraction();
+    }
+
+    public void loadBottomMenuInteraction() {
+        ViewPager2 viewPager = findViewById(R.id.vp2_mainPager);
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNav);
+        BottomMainMenuAdapter adapter = new BottomMainMenuAdapter(this);
+        viewPager.setAdapter(adapter);
+
+        bottomNav.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_explorar) {
+                viewPager.setCurrentItem(0, true);
+                return true;
+            } else if (itemId == R.id.nav_historial) {
+                viewPager.setCurrentItem(1, true);
+                return true;
+            } else if (itemId == R.id.nav_calificar) {
+                viewPager.setCurrentItem(2, true);
+                return true;
+            }
+            return false;
+        });
+
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                switch (position) {
+                    case 0:
+                        bottomNav.setSelectedItemId(R.id.nav_explorar);
+                        break;
+                    case 1:
+                        bottomNav.setSelectedItemId(R.id.nav_historial);
+                        break;
+                    case 2:
+                        bottomNav.setSelectedItemId(R.id.nav_calificar);
+                        break;
+                }
+            }
         });
     }
 }
