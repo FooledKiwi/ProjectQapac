@@ -11,15 +11,18 @@
         android:layout_height="wrap_content"
         android:text="@string/explore" />
 
+
+
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/ll_bottom_sheet"
         style="@style/cardViewRoundedStyle"
+        app:layout_insetEdge="bottom"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent"
         app:behavior_peekHeight="120dp"
         app:behavior_hideable="false">
 
     <LinearLayout
-        android:id="@+id/ll_bottom_sheet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -185,4 +188,15 @@
 
     </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabOpenPlanner"
+        android:src="@drawable/icon_search_location_white"
+        android:layout_width="wrap_content"
+        android:layout_gravity="bottom|end"
+        app:layout_dodgeInsetEdges="bottom"
+        android:layout_marginBottom="20dp"
+        android:layout_margin="16dp"
+        android:elevation="5dp"
+        android:layout_height="wrap_content"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
