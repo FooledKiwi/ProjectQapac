@@ -25,9 +25,16 @@
     <string name="error_not_valid_phone">El número de celular no es correcto.</string>
     <string name="error_not_type_user">Selecciona un tipo de usuario.</string>
     <string name="txtCurrentAlerts">Alertas Recientes de Ruta</string>
+    <string name="txtHistoryRoutes">Viajes Realizados: </string>
     <string name="txtActive">Activo</string>
     <string name="txtInactive">Inactivo</string>
+    <string name="txtWaiting">Pendiente</string>
+    <string name="txtBestPrice">Mejor Precio</string>
+    <string name="txtNearest">Más Cerca</string>
+    <string name="txtFastest">Más rápido</string>
+
     <string name="test_txt_alerts">2 Nuevas</string>
+    <string name="test_txt_trips_register">2 Registrados</string>
     <string name="prompt_email">Email</string>
     <string name="test_txt_description">Múltiples usuarios reportan cambio en la ruta P13 debido a construcción de ByPass en Av. Héroes. Se ha trazado una nueva ruta alternativa</string>
     <string name="prompt_password">Contraseña</string>

@@ -42,6 +42,7 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
+
     <style name="ImageDefault">
         <item name="android:scaleType">centerCrop</item>
         <item name="android:width">60dp</item>
