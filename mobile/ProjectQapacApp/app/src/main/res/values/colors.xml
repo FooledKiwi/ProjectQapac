@@ -4,9 +4,11 @@
     <color name="white">#FDF7FF</color>
     <color name="purple">#4E3A89</color>
     <color name="yellow">#FACA28</color>
+    <color name="yellow_v2">#FFC824</color>
     <color name="lightGray">#adadad</color>
     <color name="darkGray">#666666</color>
     <color name="darkModeContent">#262424</color>
+    <color name="cream">#F9F4DA</color>
     <color name="magenta">#B500FF</color>
     <color name="magenta_light">#BC43EB</color>
     <color name="purple_dark">#6425F2</color>
@@ -14,4 +16,10 @@
     <color name="color_active">#8BC34A</color>
     <color name="green_dark">#437106</color>
     <color name="red_dark">#B40739</color>
+    <color name="red">#EF4444</color>
+    <color name="pink">#FEE2E2</color>
+    <color name="gray">#ADB2B9</color>
+    <color name="bone">#DDDEE2</color>
+    <color name="background_alerts">#F9FAFB</color>
+    <color name="blue">#6200EA</color>
 </resources>

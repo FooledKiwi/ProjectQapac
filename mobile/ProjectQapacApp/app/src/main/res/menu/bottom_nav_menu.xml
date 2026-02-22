@@ -9,6 +9,11 @@
         android:icon="@drawable/history"
         android:title="@string/history" />
     <item
+        android:id="@+id/nav_alerts"
+        android:title="@string/alarms"
+        android:icon="@drawable/icon_no_alarms_dark">
+    </item>
+    <item
         android:id="@+id/nav_calificar"
         android:icon="@drawable/star"
         android:title="@string/rating" />

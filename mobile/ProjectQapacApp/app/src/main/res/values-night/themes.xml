@@ -4,6 +4,8 @@
         <item name="colorSurface">@color/darkModeContent</item>
         <item name="colorOnSurface">@color/white</item>
         <item name="backgroundTint">@color/darkModeContent</item>
+        <item name="background">@color/darkModeContent</item>
+        <item name="backgroundColor">@color/gray</item>
         <item name="android:textColor">@color/lightGray</item>
 
     </style>

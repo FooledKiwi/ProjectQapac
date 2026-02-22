@@ -13,10 +13,11 @@
     <string name="text_password">Contraseña</string>
     <string name="explore">Explorar</string>
     <string name="history">Historial</string>
+    <string name="alarms">Notificaciones</string>
     <string name="rating">Calificaciones</string>
-    <!-- TODO: Remove or change this placeholder text -->
+    <string name="text_location">Ubicación Aproximada:</string>
+    <string name="text_time">Tiempo Aproximado de Llegada:</string>
     <string name="hello_blank_fragment">Hola fragment en blanco</string>
-    <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Contraseña</string>
     <string name="confirm_password">Confirmar Contraseña</string>

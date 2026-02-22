@@ -7,21 +7,27 @@
     tools:context=".main.ExploreFragment">
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/explore" />
+
+    <com.google.android.material.card.MaterialCardView
+        app:cardCornerRadius="25dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardElevation="8dp"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/explore"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="wrap_content"
+        app:behavior_peekHeight="120dp"
+        app:behavior_hideable="false">
+
     <LinearLayout
         android:id="@+id/ll_bottom_sheet"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@color/white"
-        android:padding="16dp"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-        app:behavior_peekHeight="120dp"
-        app:behavior_hideable="false">
+        android:padding="16dp">
         <View
             android:layout_width="40dp"
             android:layout_height="4dp"
@@ -32,12 +38,14 @@
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
+
             <ImageView
-                android:src="@drawable/icon_bus_one"
-                android:background="@color/yellow"
                 android:layout_width="70dp"
+                android:layout_height="70dp"
                 android:layout_marginEnd="5dp"
-                android:layout_height="70dp"/>
+                android:background="@color/yellow"
+                android:src="@drawable/icon_bus_one" />
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -84,8 +92,89 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"/>
         </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <include
+                android:id="@+id/cardDriver"
+                layout="@layout/ly_driver_collector_item" />
+            <include
+                android:id="@+id/cardCollector"
+                layout="@layout/ly_driver_collector_item" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginTop="15dp"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <androidx.cardview.widget.CardView
+                app:cardCornerRadius="13dp"
+                android:backgroundTint="@color/yellow"
+                android:layout_width="60dp"
+                android:layout_height="60dp">
+                <ImageView
+                    android:layout_margin="15dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/clock_icon_dark"/>
+            </androidx.cardview.widget.CardView>
+            <LinearLayout
+                android:layout_marginStart="15dp"
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="@string/text_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    style="@style/TextHourMinutesSeconds"
+                    tools:text="08:00 min"
+                    android:textSize="28sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginTop="15dp"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <androidx.cardview.widget.CardView
+                app:cardCornerRadius="13dp"
+                android:backgroundTint="@color/red"
+                android:layout_width="60dp"
+                android:layout_height="60dp">
+                <ImageView
+                    android:layout_margin="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/icon_geo_dark"/>
+            </androidx.cardview.widget.CardView>
+            <LinearLayout
+                android:layout_marginStart="15dp"
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    tools:text="@string/text_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    style="@style/TextHourMinutesSeconds"
+                    tools:text="Real Plaza Cajamarca"
+                    android:textSize="28sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+        </LinearLayout>
 
 
     </LinearLayout>
-
+    </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
