@@ -18,7 +18,9 @@
     <string name="text_location">Ubicación Aproximada:</string>
     <string name="text_time">Tiempo Aproximado de Llegada:</string>
     <string name="hello_blank_fragment">Hola fragment en blanco</string>
-
+    <string name="error_empty_user">El usuario no puede estar vacío.</string>
+    <string name="error_empty_password">Ingresa una contraseña.</string>
+    <string name="error_short_password">La contraseña es muy corta.</string>
     <string name="txtCurrentAlerts">Alertas Recientes de Ruta</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Contraseña</string>

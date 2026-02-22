@@ -15,8 +15,6 @@
             android:layout_marginStart="5dp"
             style="@style/headingOne"
             android:text="@string/txtCurrentAlerts" />
-        <
-
     </LinearLayout>
 
 
