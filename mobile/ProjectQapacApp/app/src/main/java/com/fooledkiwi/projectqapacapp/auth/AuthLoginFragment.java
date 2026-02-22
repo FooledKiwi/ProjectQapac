@@ -20,20 +20,10 @@ import com.fooledkiwi.projectqapacapp.R;
  * create an instance of this fragment.
  */
 public class AuthLoginFragment extends Fragment {
-
-
     public AuthLoginFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment AuthLoginFragment.
-     */
     // TODO: Rename and change types and number of parameters
     public static AuthLoginFragment newInstance(String param1, String param2) {
         AuthLoginFragment fragment = new AuthLoginFragment();
@@ -54,17 +44,21 @@ public class AuthLoginFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_auth_login, container, false);
         Button loginButton = view.findViewById(R.id.btn_loginConfirm);
         loginButton.setOnClickListener(v -> {
-            Intent gotoMain = new Intent(view.getContext(), MainActivity.class);
-            if(CheckLogin(v)) startActivity(gotoMain);
+            if(CheckLogin()) {
+                Intent gotoMain = new Intent(v.getContext(), MainActivity.class);
+                startActivity(gotoMain);
+            }
         });
         return view;
     }
 
-    public boolean CheckLogin(View vw) {
+    public boolean CheckLogin() {
+        View vw = requireView();
+
         EditText inputUser = vw.findViewById(R.id.editText_loginUser);
         EditText inputPassword = vw.findViewById(R.id.editText_loginPassword);
 
-        String username = inputUser.getText().toString().trim();
+        String username = inputUser.getText().toString();
         String password = inputPassword.getText().toString();
 
         if (username.isEmpty()) {
