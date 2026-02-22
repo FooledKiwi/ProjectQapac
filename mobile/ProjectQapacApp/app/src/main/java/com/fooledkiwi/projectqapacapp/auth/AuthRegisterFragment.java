@@ -10,7 +10,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.fooledkiwi.projectqapacapp.MainActivity;
 import com.fooledkiwi.projectqapacapp.R;
@@ -22,33 +24,16 @@ import com.fooledkiwi.projectqapacapp.R;
  */
 public class AuthRegisterFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     public AuthRegisterFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment AuthRegisterFragment.
-     */
     // TODO: Rename and change types and number of parameters
     public static AuthRegisterFragment newInstance(String param1, String param2) {
         AuthRegisterFragment fragment = new AuthRegisterFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        //args.putString(ARG_PARAM1, param1);
+        //args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -56,10 +41,11 @@ public class AuthRegisterFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        /*
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        }*/
     }
 
     @Override
@@ -74,8 +60,69 @@ public class AuthRegisterFragment extends Fragment {
         Button loginButton = vw.findViewById(R.id.btn_registerConfirm);
         loginButton.setOnClickListener(v -> {
             Intent gotoMain = new Intent(vw.getContext(), MainActivity.class);
-            startActivity(gotoMain);
+            if(CheckRegister()) startActivity(gotoMain);
         });
         return vw;
+    }
+
+    public boolean CheckRegister() {
+        View root = requireView();
+
+        EditText inputUser = root.findViewById(R.id.editText_registerUser);
+        EditText inputPassword = root.findViewById(R.id.editText_registerPassword);
+        EditText inputConfirm = root.findViewById(R.id.editText_registerConfirm);
+        EditText inputPhone = root.findViewById(R.id.editTextPhone);
+        Spinner spUserType = root.findViewById(R.id.sp_userType);
+
+        String username = inputUser.getText().toString().trim();
+        String password = inputPassword.getText().toString();
+        String confirmPass = inputConfirm.getText().toString();
+        String phone = inputPhone.getText().toString().trim();
+
+        if (username.isEmpty()) {
+            inputUser.setError(getString(R.string.error_empty_user));
+            inputUser.requestFocus();
+            return false;
+        }
+
+        if (password.length() < 6) {
+            inputPassword.setError(getString(R.string.error_short_password));
+            inputPassword.requestFocus();
+            return false;
+        }
+
+        if (!confirmPass.equals(password)) {
+            inputConfirm.setError(getString(R.string.error_password_different));
+            inputConfirm.requestFocus();
+            inputConfirm.setText("");
+            return false;
+        }
+
+        if (phone.isEmpty() || phone.length() < 9) {
+            inputPhone.setError(getString(R.string.error_not_valid_phone));
+            inputPhone.requestFocus();
+            return false;
+        }
+
+        if (spUserType.getSelectedItemPosition() == 0) {
+            Toast.makeText(requireContext(), getString(R.string.error_not_type_user), Toast.LENGTH_SHORT).show();
+            spUserType.requestFocus();
+            return false;
+        }
+
+        String userType = spUserType.getSelectedItem().toString();
+
+        // 5. TODO LISTO PARA LA BASE DE DATOS
+        // Si la ejecución llega a esta línea, los datos son 100% íntegros y válidos.
+
+        // Ejemplo de inserción:
+        // User newUser = new User(username, password, phone, userType);
+        // long id = miDatabaseHelper.registrarUsuario(newUser);
+        //
+        // if (id > 0) {
+        //     Toast.makeText(requireContext(), "Registro exitoso", Toast.LENGTH_SHORT).show();
+        //     // Limpiar campos o navegar al Login
+        // }
+        return true;
     }
 }
