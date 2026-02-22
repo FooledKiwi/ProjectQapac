@@ -3,6 +3,23 @@
     <style name="Base.Theme.ProjectQapacApp" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorSurface">@color/darkModeContent</item>
         <item name="colorOnSurface">@color/white</item>
+        <item name="backgroundTint">@color/darkModeContent</item>
         <item name="android:textColor">@color/lightGray</item>
+
+    </style>
+
+    <style name="ProfilePassenger">
+        <item name="android:src">@drawable/passenger_version_two_white</item>
+    </style>
+
+    <style name="textUsername">
+        <item name="android:textAlignment">textEnd</item>
+        <item name="android:textColor">@color/lightGray</item>
+    </style>
+
+    <style name="TextHourMinutesSeconds">
+        <item name="android:textAlignment">textEnd</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

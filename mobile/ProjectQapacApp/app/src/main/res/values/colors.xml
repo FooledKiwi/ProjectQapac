@@ -7,4 +7,7 @@
     <color name="lightGray">#adadad</color>
     <color name="darkGray">#666666</color>
     <color name="darkModeContent">#262424</color>
+    <color name="magenta">#B500FF</color>
+    <color name="magenta_light">#BC43EB</color>
+    <color name="purple_dark">#6425F2</color>
 </resources>
