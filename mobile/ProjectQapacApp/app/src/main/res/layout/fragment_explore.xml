@@ -4,18 +4,88 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.main.ExploreFragment">
+    tools:context=".main.ExploreFragment">
 
-    <fragment
-        android:id="@+id/fragmentMap"
-        android:name=""
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="@string/explore"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout
+        android:id="@+id/ll_bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:padding="16dp"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        app:behavior_peekHeight="120dp"
+        app:behavior_hideable="false">
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@color/purple_dark" />
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:src="@drawable/icon_bus_one"
+                android:background="@color/yellow"
+                android:layout_width="70dp"
+                android:layout_marginEnd="5dp"
+                android:layout_height="70dp"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_marginStart="5dp"
+                        tools:text="HOLA BRANDON"
+                        android:textSize="20dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                    <androidx.cardview.widget.CardView
+                        app:cardCornerRadius="10dp"
+                        android:layout_marginVertical="5dp"
+                        android:layout_marginStart="10dp"
+                        android:padding="50dp"
+                        android:backgroundTint="@color/color_active"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:textColor="@color/green_dark"
+                            android:textStyle="bold"
+                            android:layout_marginHorizontal="10dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Activo"/>
+                    </androidx.cardview.widget.CardView>
+                </LinearLayout>
+                <TextView
+                    android:layout_marginStart="5dp"
+                    tools:text="Placa: HOLAAA LUIIIIS"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+            <CheckBox
+                android:layout_marginStart="20dp"
+                android:id="@+id/btnFavorite"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:button="@drawable/selector_favorite"
+                android:layout_width="50dp"
+                android:layout_height="50dp"/>
+        </LinearLayout>
+
+
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

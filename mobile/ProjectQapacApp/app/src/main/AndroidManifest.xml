@@ -18,10 +18,10 @@
             android:name=".MainActivity"
             android:exported="false" />
         <activity
-            android:name=".AuthActivity"
+            android:name=".auth.AuthActivity"
             android:exported="false" />
         <activity
-            android:name=".FirstTimeActivity"
+            android:name=".auth.FirstTimeActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

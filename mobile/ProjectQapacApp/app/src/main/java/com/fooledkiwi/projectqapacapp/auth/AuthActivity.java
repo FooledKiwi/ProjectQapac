@@ -1,4 +1,4 @@
-package com.fooledkiwi.projectqapacapp;
+package com.fooledkiwi.projectqapacapp.auth;
 
 import android.os.Bundle;
 
@@ -9,7 +9,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.fooledkiwi.projectqapacapp.fragments.auth.TabAuthAdapter;
+import com.fooledkiwi.projectqapacapp.Adapters.auth.TabAuthAdapter;
+import com.fooledkiwi.projectqapacapp.R;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 

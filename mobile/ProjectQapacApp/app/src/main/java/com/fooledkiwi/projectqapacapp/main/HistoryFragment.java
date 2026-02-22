@@ -1,4 +1,4 @@
-package com.fooledkiwi.projectqapacapp.fragments.auth;
+package com.fooledkiwi.projectqapacapp.main;
 
 import android.os.Bundle;
 
@@ -7,17 +7,15 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 
 import com.fooledkiwi.projectqapacapp.R;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link AuthRegisterFragment#newInstance} factory method to
+ * Use the {@link HistoryFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class AuthRegisterFragment extends Fragment {
+public class HistoryFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -28,7 +26,7 @@ public class AuthRegisterFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    public AuthRegisterFragment() {
+    public HistoryFragment() {
         // Required empty public constructor
     }
 
@@ -38,11 +36,11 @@ public class AuthRegisterFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment AuthRegisterFragment.
+     * @return A new instance of fragment HistoryFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static AuthRegisterFragment newInstance(String param1, String param2) {
-        AuthRegisterFragment fragment = new AuthRegisterFragment();
+    public static HistoryFragment newInstance(String param1, String param2) {
+        HistoryFragment fragment = new HistoryFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -60,13 +58,9 @@ public class AuthRegisterFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View vw = inflater.inflate(R.layout.fragment_auth_register, container, false);
-        Spinner userType = vw.findViewById(R.id.sp_userType);
-        String[] types = {"Selecciona para que usas la app","Soy conductor", "Soy Usuario"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(vw.getContext(), android.R.layout.simple_spinner_dropdown_item, types);
-        userType.setAdapter(adapter);
-        return vw;
+        return inflater.inflate(R.layout.fragment_history, container, false);
     }
 }
