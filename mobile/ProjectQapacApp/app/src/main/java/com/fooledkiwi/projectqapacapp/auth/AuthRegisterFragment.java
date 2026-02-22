@@ -1,6 +1,8 @@
 package com.fooledkiwi.projectqapacapp.auth;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -123,6 +125,10 @@ public class AuthRegisterFragment extends Fragment {
         //     Toast.makeText(requireContext(), "Registro exitoso", Toast.LENGTH_SHORT).show();
         //     // Limpiar campos o navegar al Login
         // }
+        SharedPreferences prefs = requireActivity().getSharedPreferences("QapacPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("first_time", false);
+        editor.apply();
         return true;
     }
 }

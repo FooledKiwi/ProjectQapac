@@ -1,6 +1,8 @@
 package com.fooledkiwi.projectqapacapp.auth;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -94,6 +96,10 @@ public class AuthLoginFragment extends Fragment {
         // } else {
         //     Toast.makeText(getContext(), "Credenciales incorrectas", Toast.LENGTH_SHORT).show();
         // }
+        SharedPreferences prefs = requireActivity().getSharedPreferences("QapacPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("first_time", false);
+        editor.apply();
         return  true;
     }
 }

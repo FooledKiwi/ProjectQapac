@@ -58,15 +58,6 @@ public class FirstTimeActivity extends AppCompatActivity {
 
     public boolean checkIfFirstTime() {
         SharedPreferences prefs = getSharedPreferences("QapacPrefs", MODE_PRIVATE);
-        boolean first = prefs.getBoolean("first_time", true);
-        if (first) {
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putBoolean("first_time", false);
-            editor.apply();
-            return true;
-        } else {
-
-            return false;
-        }
+        return prefs.getBoolean("first_time", true);
     }
 }
