@@ -526,5 +526,6 @@ crashlytics-build.properties
 fabric.properties
 
 
-
+.env
+*env
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Java,Android,DotnetCore,ASPNETCore,AndroidStudio,c#,xml
