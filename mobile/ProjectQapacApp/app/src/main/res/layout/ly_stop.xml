@@ -10,8 +10,7 @@
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:layout_marginEnd="5dp"
-        android:background="@color/yellow"
-        android:src="@drawable/icon_bus_one" />
+        android:src="@drawable/icon_bus_stop" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -26,20 +25,8 @@
                 android:layout_marginStart="5dp"
                 style="@style/headingTwo"
                 android:text="@string/txtRouteName"
-                android:layout_width="155dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
-            <androidx.cardview.widget.CardView
-                app:cardCornerRadius="10dp"
-                android:backgroundTint="@color/color_active"
-                style="@style/CardTextstates">
-                <TextView
-                    android:textColor="@color/green_dark"
-                    android:textStyle="bold"
-                    android:layout_marginHorizontal="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/txtActive"/>
-            </androidx.cardview.widget.CardView>
         </LinearLayout>
         <TextView
             android:id="@+id/tvLabelVehicle"

@@ -35,6 +35,11 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.StopViewHolder
         Stop stop = stops.get(position);
         holder.tvRouteName.setText(stop.getName());
         holder.tvLabelVehicle.setText(stop.getLat() + ", " + stop.getLon());
+        holder.btnFavorite.setOnCheckedChangeListener((buttonView, isChecked) -> onFavoriteClick(stop));
+    }
+
+    private void onFavoriteClick(Stop stop) {
+        // TODO: implementar lógica de favorito
     }
 
     @Override
