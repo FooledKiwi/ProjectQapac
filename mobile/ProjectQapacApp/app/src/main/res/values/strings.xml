@@ -56,4 +56,6 @@
     <string name="txtAlert">Notificaciones</string>
     <string name="bus_context_desc">Bus</string>
     <string name="total">Total</string>
+    <string name="txt_no_route_title">Selecciona una ruta</string>
+    <string name="txt_no_route_subtitle">Toca un marcador en el mapa para ver la información</string>
 </resources>

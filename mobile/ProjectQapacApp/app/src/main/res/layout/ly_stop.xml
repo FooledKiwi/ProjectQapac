@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginTop="10dp"
+    android:orientation="horizontal"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginEnd="5dp"
+        android:background="@color/yellow"
+        android:src="@drawable/icon_bus_one" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/tvRouteName"
+                android:layout_marginStart="5dp"
+                style="@style/headingTwo"
+                android:text="@string/txtRouteName"
+                android:layout_width="155dp"
+                android:layout_height="wrap_content"/>
+            <androidx.cardview.widget.CardView
+                app:cardCornerRadius="10dp"
+                android:backgroundTint="@color/color_active"
+                style="@style/CardTextstates">
+                <TextView
+                    android:textColor="@color/green_dark"
+                    android:textStyle="bold"
+                    android:layout_marginHorizontal="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/txtActive"/>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/tvLabelVehicle"
+            android:layout_marginStart="5dp"
+            android:text="@string/txtVehicleLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+    <CheckBox
+        android:id="@+id/btnFavorite"
+        android:layout_height="50dp"
+        android:layout_width="50dp"
+        android:buttonTint="@null"
+        android:layout_marginStart="20dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:button="@drawable/selector_favorite"
+        />
+</LinearLayout>
