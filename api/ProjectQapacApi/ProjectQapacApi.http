@@ -1,6 +1,0 @@
-@ProjectQapacApi_HostAddress = http://localhost:5120
-
-GET {{ProjectQapacApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
