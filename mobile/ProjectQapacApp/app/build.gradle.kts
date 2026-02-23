@@ -36,6 +36,7 @@ android {
     }
 }
 
+
 dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -44,6 +45,8 @@ dependencies {
     implementation(libs.viewpager2)
     implementation(libs.recyclerview)
     implementation(libs.annotation)
+    implementation(libs.gms.play.services.maps)
+    implementation(libs.gms.play.services.location)
     implementation(libs.lifecycle.livedata.ktx)
     implementation(libs.lifecycle.viewmodel.ktx)
     testImplementation(libs.junit)
