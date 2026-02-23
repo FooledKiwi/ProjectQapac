@@ -2,7 +2,7 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.ProjectQapacApp" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorSurface">@color/black</item>
-        <item name="colorOnSurface">@color/darkGray</item>
+        <item name="colorOnSurface">@color/lightGray</item>
         <item name="backgroundTint">@color/cream</item>
         <item name="background">@color/cream</item>
         <item name="backgroundColor">@color/cream</item>

@@ -54,4 +54,6 @@
     <string name="txtConfig">Configuración</string>
     <string name="txtProfile">Perfil</string>
     <string name="txtAlert">Notificaciones</string>
+    <string name="bus_context_desc">Bus</string>
+    <string name="total">Total</string>
 </resources>

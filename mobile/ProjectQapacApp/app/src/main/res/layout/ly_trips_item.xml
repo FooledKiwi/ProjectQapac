@@ -35,12 +35,14 @@
             android:paddingHorizontal="25dp"
             android:paddingVertical="15dp"
             android:orientation="horizontal">
+
             <ImageView
                 android:id="@+id/ivIconRoute"
-                android:layout_height="55dp"
                 android:layout_width="55dp"
-                android:background="@null"
+                android:layout_height="55dp"
                 android:layout_marginEnd="5dp"
+                android:background="@null"
+                android:contentDescription="@string/bus_context_desc"
                 android:src="@drawable/icon_bus_one" />
 
         <LinearLayout
@@ -85,29 +87,25 @@
                     android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
+
                     <TextView
-                        android:textStyle="bold"
                         android:id="@+id/tvPrice"
-                        android:text="S/ 02.00"
-                        android:textSize="16dp"
-                        android:gravity="center"
                         style="@style/txtSubtitles"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"/>
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="S/ 02.00"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
                     <TextView
-                        android:text="Total"
-                        android:textAlignment="textEnd"
                         android:layout_width="match_parent"
-                        android:layout_height="20dp"/>
+                        android:layout_height="wrap_content"
+                        android:text="@string/total"
+                        android:textAlignment="textEnd" />
             </LinearLayout>
 
         </LinearLayout>
-
-        </LinearLayout>
-        <LinearLayout
-            android:backgroundTint="@color/red"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

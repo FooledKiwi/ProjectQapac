@@ -71,10 +71,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             map.setMyLocationEnabled(true);
             fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), location -> {
                 if (location != null) {
-                    // Creamos el objeto LatLng con las coordenadas del usuario
                     LatLng miUbicacion = new LatLng(location.getLatitude(), location.getLongitude());
-
-                    // Movemos la cámara con una animación suave y un zoom de 15f (ideal para ver calles)
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(miUbicacion, 15f));
                 }
             });
