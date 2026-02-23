@@ -38,7 +38,7 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.StopViewHolder
         holder.btnFavorite.setOnCheckedChangeListener((buttonView, isChecked) -> onFavoriteClick(stop));
     }
 
-    private void onFavoriteClick(Stop stop) {
+    void onFavoriteClick(Stop stop) {
         // TODO: implementar lógica de favorito
     }
 

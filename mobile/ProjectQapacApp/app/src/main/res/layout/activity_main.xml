@@ -23,7 +23,6 @@
         android:background="?attr/colorSurface"
         app:labelVisibilityMode="labeled"
         app:itemIconTint="?attr/colorOnSurface"
-        app:itemTextColor="?attr/backgroundColor"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

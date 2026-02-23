@@ -1,5 +1,6 @@
 package com.fooledkiwi.projectqapacapp.adapters;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
@@ -7,18 +8,19 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import com.fooledkiwi.projectqapacapp.fragments.auth.AuthLoginFragment;
 import com.fooledkiwi.projectqapacapp.fragments.auth.AuthRegisterFragment;
 
-import org.jetbrains.annotations.NotNull;
-
 public class TabAuthAdapter extends FragmentStateAdapter {
-    public TabAuthAdapter(@NotNull FragmentActivity fragmentActivity) {
+    public TabAuthAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
     }
 
-    @NotNull
+    @NonNull
     @Override
     public Fragment createFragment(int pos) {
-        if(pos == 0) {return  new AuthLoginFragment();}
-        else return new AuthRegisterFragment();
+        if(pos == 0) {
+            return new AuthLoginFragment();
+        } else {
+            return new AuthRegisterFragment();
+        }
     }
 
     @Override
