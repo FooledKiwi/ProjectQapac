@@ -1,0 +1,25 @@
+[tools]
+go = "1.26"
+
+[env]
+_.file = "compose/.env"
+PROJECT_NAME = "qapac"
+DB_DSN = "postgres://{{env.DB_USER}}:{{env.DB_PASSWD}}@localhost:5432/{{env.DB_NAME}}?sslmode=disable"
+GOOGLE_API_KEY = ""
+PORT = "8080"
+
+[tasks."db:up"]
+description = "Levanta la base de datos PostgreSQL + PostGIS local"
+run = "docker compose -f compose/compose.yml up -d"
+
+[tasks."db:down"]
+description = "Detiene la base de datos local"
+run = "docker compose -f compose/compose.yml down"
+
+[tasks."db:clean"]
+description = "Detiene la base de datos y elimina el volumen"
+run = "docker compose -f compose/compose.yml down -v"
+
+[tasks."api:dev"]
+description = "Ejecuta la API de Go en modo desarrollo"
+run = "go run cmd/server/main.go"
