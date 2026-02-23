@@ -1,13 +1,13 @@
-package com.fooledkiwi.projectqapacapp.Adapters.auth;
+package com.fooledkiwi.projectqapacapp.adapters;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import com.fooledkiwi.projectqapacapp.main.AlertsFragment;
-import com.fooledkiwi.projectqapacapp.main.ExploreFragment;
-import com.fooledkiwi.projectqapacapp.main.HistoryFragment;
-import com.fooledkiwi.projectqapacapp.main.RatingFragment;
+import com.fooledkiwi.projectqapacapp.fragments.main.AlertsFragment;
+import com.fooledkiwi.projectqapacapp.fragments.main.ExploreFragment;
+import com.fooledkiwi.projectqapacapp.fragments.main.HistoryFragment;
+import com.fooledkiwi.projectqapacapp.fragments.main.RatingFragment;
 
 import org.jetbrains.annotations.NotNull;
 

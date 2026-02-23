@@ -1,4 +1,4 @@
-package com.fooledkiwi.projectqapacapp.auth;
+package com.fooledkiwi.projectqapacapp.fragments.auth;
 
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +16,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.fooledkiwi.projectqapacapp.MainActivity;
+import com.fooledkiwi.projectqapacapp.activities.MainActivity;
 import com.fooledkiwi.projectqapacapp.R;
 
 /**

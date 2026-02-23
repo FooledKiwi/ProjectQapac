@@ -1,4 +1,4 @@
-package com.fooledkiwi.projectqapacapp.auth;
+package com.fooledkiwi.projectqapacapp.fragments.auth;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,7 +11,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.fooledkiwi.projectqapacapp.MainActivity;
+import com.fooledkiwi.projectqapacapp.activities.AuthActivity;
+import com.fooledkiwi.projectqapacapp.activities.MainActivity;
 import com.fooledkiwi.projectqapacapp.R;
 
 public class FirstTimeActivity extends AppCompatActivity {

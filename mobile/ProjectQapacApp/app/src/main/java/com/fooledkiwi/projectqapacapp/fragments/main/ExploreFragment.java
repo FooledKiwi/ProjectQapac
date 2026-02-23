@@ -1,4 +1,4 @@
-package com.fooledkiwi.projectqapacapp.main;
+package com.fooledkiwi.projectqapacapp.fragments.main;
 
 import android.Manifest;
 import android.content.pm.PackageManager;

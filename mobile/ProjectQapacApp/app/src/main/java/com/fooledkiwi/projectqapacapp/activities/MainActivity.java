@@ -1,4 +1,4 @@
-package com.fooledkiwi.projectqapacapp;
+package com.fooledkiwi.projectqapacapp.activities;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -15,7 +15,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.fooledkiwi.projectqapacapp.Adapters.auth.BottomMainMenuAdapter;
+import com.fooledkiwi.projectqapacapp.adapters.BottomMainMenuAdapter;
+import com.fooledkiwi.projectqapacapp.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {

@@ -6,7 +6,7 @@
     android:background="?attr/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".auth.FirstTimeActivity">
+    tools:context=".fragments.auth.FirstTimeActivity">
 
     <Button
         android:id="@+id/btn_register"

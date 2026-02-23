@@ -1,11 +1,11 @@
-package com.fooledkiwi.projectqapacapp.Adapters.auth;
+package com.fooledkiwi.projectqapacapp.adapters;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import com.fooledkiwi.projectqapacapp.auth.AuthLoginFragment;
-import com.fooledkiwi.projectqapacapp.auth.AuthRegisterFragment;
+import com.fooledkiwi.projectqapacapp.fragments.auth.AuthLoginFragment;
+import com.fooledkiwi.projectqapacapp.fragments.auth.AuthRegisterFragment;
 
 import org.jetbrains.annotations.NotNull;
 
