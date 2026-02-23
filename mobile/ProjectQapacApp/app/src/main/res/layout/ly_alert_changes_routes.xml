@@ -40,14 +40,14 @@
                     android:layout_marginStart="3dp"
                     style="@style/headingTwo"
                     android:textColor="@color/red"
-                    android:text="Cambio de Ruta"
+                    android:text="@string/test_txt_titleNotif"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <TextView
                     android:id="@+id/tvSubtitleNotification"
                     android:layout_marginStart="3dp"
                     style="@style/txtSubtitles"
-                    android:text="RUTA P13 - Placa: R2DX-145"
+                    android:text="@string/test_txt_subtitle_alert"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
 

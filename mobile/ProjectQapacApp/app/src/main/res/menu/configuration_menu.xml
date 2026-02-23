@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        app:showAsAction="always"
+        android:id="@+id/action_alerts"
+        android:title="@string/txtAlert"
+        android:icon="@drawable/icon_no_alarms_dark"
+        />
+    <item
+        app:showAsAction="always"
+        android:id="@+id/action_profile"
+        android:title="@string/txtProfile"
+        android:icon="@drawable/icon_profile"
+
+        />
+    <item
+        android:id="@+id/action_settings"
+        android:visible="true"
+        app:showAsAction="always"
+        android:title="@string/txtConfig"
+        android:icon="@drawable/icon_gear_black"/>
+
+
+</menu>

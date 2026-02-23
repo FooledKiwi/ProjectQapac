@@ -19,7 +19,7 @@
          <ImageView
              android:src="@drawable/location"
              android:layout_width="30dp"
-             android:layout_height="30dp"/>
+             android:layout_height="match_parent"/>
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -32,9 +32,23 @@
                 android:textColor="?attr/colorSurface"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
+            <TextView
+                style="@style/txtSubtitles"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textAlignment="textStart"
+                android:text="@string/txtSubtitleAlerts"
+                android:textColor="?attr/colorSurface"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         </LinearLayout>
 
+         <androidx.appcompat.widget.Toolbar
+             android:layout_height="wrap_content"
+
+             android:layout_width="match_parent"
+             app:menu="@menu/configuration_menu"
+             />
 
      </LinearLayout>
 
