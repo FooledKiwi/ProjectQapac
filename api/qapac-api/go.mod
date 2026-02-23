@@ -1,4 +1,4 @@
-module github.com/dom1nux/qapac-api
+module github.com/FooledKiwi/ProjectQapac/api/qapac-api
 
 go 1.25.7
 
