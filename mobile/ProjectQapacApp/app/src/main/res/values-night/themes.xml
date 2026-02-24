@@ -8,12 +8,16 @@
         <item name="colorPrimary">@color/magenta_light</item>
         <item name="colorOnPrimary">@color/purple</item>
         <item name="colorSecondary">@color/yellow</item>
+        <item name="colorSecondaryVariant">@color/black</item>
         <item name="materialButtonStyle">@style/AppButton1</item>
         <item name="editTextStyle">@style/EditText1</item>
     </style>
 
     <style name="ProfilePassenger">
         <item name="android:src">@drawable/passenger_version_two_white</item>
+    </style>
+    <style name="PrincipalCardBackgroundTint" parent="Widget.MaterialComponents.CardView">
+        <item name="android:backgroundTint">@color/black</item>
     </style>
 
     <style name="CardBackgroundTint" parent="Widget.MaterialComponents.CardView">
