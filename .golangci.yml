@@ -5,7 +5,6 @@ linters:
     - govet       # Reports suspicious constructs (official go tool)
     - errcheck    # Checks that errors are handled
     - staticcheck # Broad static analysis (SA*, S1*, QF* checks)
-    - gosimple    # Suggests simplifications
     - ineffassign # Detects ineffectual assignments
     - unused      # Reports unused code (vars, funcs, types, consts)
   settings:
