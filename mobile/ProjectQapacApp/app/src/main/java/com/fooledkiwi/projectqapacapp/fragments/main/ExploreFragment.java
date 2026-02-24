@@ -22,6 +22,8 @@ import androidx.fragment.app.Fragment;
 
 import com.fooledkiwi.projectqapacapp.R;
 import com.fooledkiwi.projectqapacapp.models.Stop;
+import com.fooledkiwi.projectqapacapp.network.ApiClient;
+import com.fooledkiwi.projectqapacapp.network.StopsApiService;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -34,6 +36,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import android.graphics.Color;
 import android.location.Address;
@@ -43,6 +46,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ExploreFragment extends Fragment implements OnMapReadyCallback {
 
@@ -55,6 +62,8 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private TextView tvLabelVehicle;
     private TextView tvCurrentLocation;
     private ActivityResultLauncher<String[]> requestPermissionLauncher;
+
+    private final List<Marker> stopMarkers = new ArrayList<>();
 
     public ExploreFragment() {
         // Required empty public constructor
@@ -109,6 +118,9 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             })
         );
 
+        //FloatingActionButton fabSearch = view.findViewById(R.id.fabSearch);
+        //fabSearch.setOnClickListener(v -> fetchNearbyStops());
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
             .findFragmentById(R.id.map_container);
@@ -154,6 +166,61 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         );
     }
 
+    private void fetchNearbyStops() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(requireContext(), "Se necesita permiso de ubicacion", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), location -> {
+            if (location == null) {
+                Toast.makeText(requireContext(), "No se pudo obtener la ubicacion", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            double lat = location.getLatitude();
+            double lon = location.getLongitude();
+
+            StopsApiService service = ApiClient.getStopsService();
+            service.getNearbyStops(lat, lon, 1000).enqueue(new Callback<List<Stop>>() {
+                @Override
+                public void onResponse(@NonNull Call<List<Stop>> call, @NonNull Response<List<Stop>> response) {
+                    if (!isAdded()) return;
+                    if (response.isSuccessful() && response.body() != null) {
+                        clearStopMarkers();
+                        for (Stop stop : response.body()) {
+                            addStopMarker(stop);
+                        }
+                        int count = response.body().size();
+                        Toast.makeText(requireContext(),
+                                count + " parada(s) encontrada(s)",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(requireContext(),
+                                "Error al obtener paradas: " + response.code(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<List<Stop>> call, @NonNull Throwable t) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Error de red: " + t.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+    }
+
+    private void clearStopMarkers() {
+        for (Marker marker : stopMarkers) {
+            marker.remove();
+        }
+        stopMarkers.clear();
+    }
+
     private void setMapGesturesEnabled(boolean enabled) {
         if (map == null) return;
         map.getUiSettings().setScrollGesturesEnabled(enabled);
@@ -196,7 +263,10 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
                 .position(position)
                 .title(stop.getName())
                 .icon(customIcon(requireContext(), R.drawable.icon_geo_dark)));
-        if (marker != null) marker.setTag(stop);
+        if (marker != null) {
+            marker.setTag(stop);
+            stopMarkers.add(marker);
+        }
     }
 
     private void onStopMarkerClick(Marker marker) {

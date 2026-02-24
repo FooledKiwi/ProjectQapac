@@ -1,13 +1,25 @@
 package com.fooledkiwi.projectqapacapp.models;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Stop {
 
+    @SerializedName("id")
     private long id;
-    private String name;
-    private float lat;
-    private float lon;
 
-    public Stop(long id, String name, float lat, float lon) {
+    @SerializedName("name")
+    private String name;
+
+    @SerializedName("lat")
+    private double lat;
+
+    @SerializedName("lon")
+    private double lon;
+
+    @SerializedName("eta_seconds")
+    private int etaSeconds;
+
+    public Stop(long id, String name, double lat, double lon) {
         this.id = id;
         this.name = name;
         this.lat = lat;
@@ -30,19 +42,27 @@ public class Stop {
         this.name = name;
     }
 
-    public float getLat() {
+    public double getLat() {
         return lat;
     }
 
-    public void setLat(float lat) {
+    public void setLat(double lat) {
         this.lat = lat;
     }
 
-    public float getLon() {
+    public double getLon() {
         return lon;
     }
 
-    public void setLon(float lon) {
+    public void setLon(double lon) {
         this.lon = lon;
+    }
+
+    public int getEtaSeconds() {
+        return etaSeconds;
+    }
+
+    public void setEtaSeconds(int etaSeconds) {
+        this.etaSeconds = etaSeconds;
     }
 }

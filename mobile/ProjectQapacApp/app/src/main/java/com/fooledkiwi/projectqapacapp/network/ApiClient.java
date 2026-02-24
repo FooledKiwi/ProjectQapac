@@ -30,4 +30,8 @@ public class ApiClient {
     public static AuthApiService getAuthService() {
         return getClient().create(AuthApiService.class);
     }
+
+    public static StopsApiService getStopsService() {
+        return getClient().create(StopsApiService.class);
+    }
 }
