@@ -28,6 +28,9 @@ type Config struct {
 	JWTSecret       string // Required for auth endpoints; signing key for HS256.
 	AccessTokenTTL  time.Duration
 	RefreshTokenTTL time.Duration
+
+	// File uploads.
+	UploadDir string // Directory for uploaded images; defaults to "./uploads/images".
 }
 
 // Load reads and validates required environment variables.
@@ -49,6 +52,11 @@ func Load() (*Config, error) {
 
 	cfg.AccessTokenTTL = parseDurationEnv("ACCESS_TOKEN_TTL", 15*time.Minute)
 	cfg.RefreshTokenTTL = parseDurationEnv("REFRESH_TOKEN_TTL", 7*24*time.Hour)
+
+	cfg.UploadDir = os.Getenv("UPLOAD_DIR")
+	if cfg.UploadDir == "" {
+		cfg.UploadDir = "./uploads/images"
+	}
 
 	portStr := os.Getenv("PORT")
 	if portStr == "" {

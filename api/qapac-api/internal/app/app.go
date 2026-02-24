@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/config"
@@ -110,6 +111,12 @@ func New(cfg *config.Config) (*App, error) {
 	driverRepo := storage.NewDriverRepository(pool)
 	tripsRepo := storage.NewTripsRepository(pool)
 
+	// Ensure uploads directory exists.
+	if err := os.MkdirAll(cfg.UploadDir, 0o755); err != nil {
+		return nil, fmt.Errorf("app: create upload dir %q: %w", cfg.UploadDir, err)
+	}
+	log.Printf("upload directory ready: %s", cfg.UploadDir)
+
 	// --- HTTP engine ---
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -127,6 +134,7 @@ func New(cfg *config.Config) (*App, error) {
 	adminH := handler.NewAdminHandler(usersRepo, vehiclesRepo, alertsRepo)
 	pubH := handler.NewPublicHandler(publicRoutesRepo, positionsRepo, alertsRepo, ratingsRepo, favoritesRepo)
 	drvH := handler.NewDriverHandler(usersRepo, driverRepo, tripsRepo)
+	uplH := handler.NewUploadHandler(cfg.UploadDir)
 
 	api := router.Group("/api/v1")
 	{
@@ -156,6 +164,9 @@ func New(cfg *config.Config) (*App, error) {
 		api.POST("/favorites", pubH.AddFavorite)
 		api.DELETE("/favorites", pubH.RemoveFavorite)
 
+		// File uploads: serving is public, uploading requires driver/admin auth.
+		api.GET("/uploads/images/:filename", uplH.ServeImage)
+
 		// Auth endpoints (no auth required to call these).
 		auth := api.Group("/auth")
 		{
@@ -175,6 +186,7 @@ func New(cfg *config.Config) (*App, error) {
 			driver.GET("/assignment", drvH.GetAssignment)
 			driver.POST("/trips/start", drvH.StartTrip)
 			driver.POST("/trips/end", drvH.EndTrip)
+			driver.POST("/uploads/images", uplH.UploadImage)
 		}
 
 		// Protected endpoints: admin role.
@@ -199,6 +211,9 @@ func New(cfg *config.Config) (*App, error) {
 			// Alert management.
 			admin.POST("/alerts", adminH.CreateAlert)
 			admin.DELETE("/alerts/:id", adminH.DeleteAlert)
+
+			// File uploads.
+			admin.POST("/uploads/images", uplH.UploadImage)
 		}
 	}
 
