@@ -37,7 +37,6 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.TravelViewHold
         holder.tvLabelVehicle.setText(trip.getPlate());
         holder.tvDurationTrip.setText(trip.getDuration());
         holder.tvDriverName.setText(trip.getDriver());
-        holder.rbRatingBar.setRating(trip.getRating());
     }
 
     @Override

@@ -218,10 +218,11 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             if (addresses != null && !addresses.isEmpty()) {
                 Address address = addresses.get(0);
                 String city = address.getLocality();
+                String postalCode = address.getPostalCode();
                 if (city == null || city.isEmpty()) city = address.getSubAdminArea();
                 if (city == null || city.isEmpty()) city = address.getAdminArea();
                 if (city != null && !city.isEmpty()) {
-                    String finalCity = city;
+                    String finalCity = city + ", " + postalCode;
                     requireActivity().runOnUiThread(() -> tvCurrentLocation.setText(finalCity));
                 }
             }
