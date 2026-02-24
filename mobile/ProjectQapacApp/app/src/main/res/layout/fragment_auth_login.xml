@@ -24,6 +24,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
+            android:textColor="@color/black"
             android:drawableStart="@drawable/icon_email"
             android:id="@+id/editText_loginUser"
             android:layout_width="346dp"
@@ -38,6 +39,7 @@
             app:layout_constraintTop_toBottomOf="@+id/imageView2" />
 
         <EditText
+            android:textColor="@color/black"
             android:drawableStart="@drawable/icon_password"
             android:id="@+id/editText_loginPassword"
             android:layout_width="346dp"
@@ -53,7 +55,7 @@
 
         <com.google.android.material.button.MaterialButton
             app:icon="@drawable/icon_login"
-            app:iconTint="?attr/colorOnSurface"
+            app:iconTint="@color/black"
             android:id="@+id/btn_loginConfirm"
             style="@style/AppButton2"
             app:iconGravity="textStart"

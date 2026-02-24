@@ -6,16 +6,27 @@
     android:layout_height="match_parent"
     tools:context=".fragments.main.RatingFragment">
 
-    <include
-        android:id="@+id/ly_profile_user"
-        layout="@layout/ly_profile_item" />
+
+    <LinearLayout
+        android:id="@+id/llprofile"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@color/purple"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <include
+            android:id="@+id/ly_profile_user"
+            layout="@layout/ly_profile_item" />
+    </LinearLayout>
+
 
     <LinearLayout
         android:id="@+id/llRating"
         android:layout_marginTop="5dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ly_profile_user"
+        app:layout_constraintTop_toBottomOf="@+id/llprofile"
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

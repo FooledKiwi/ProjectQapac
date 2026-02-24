@@ -9,6 +9,7 @@
     <string name="image_register_desc">Imagen de registarse</string>
     <string name="water_marc">© FooledKiwi</string>
     <string name="text_insert_username">Email</string>
+    <string name="txtDurationTrip">Duración:</string>
     <string name="text_insert_phone">Teléfono</string>
     <string name="text_password">Contraseña</string>
     <string name="explore">Explorar</string>
@@ -51,12 +52,14 @@
     <string name="login_failed">"Error al iniciar sesión"</string>
     <string name="login_success">"Inicio de sesión exitoso"</string>
     <string name="txtRouteName">RUTA P13</string>
-    <string name="txtVehicleLabel">Placa: DCM-15193    </string>
+    <string name="txtVehicleLabel">Placa:</string>
     <string name="txtRestTime">03:10 min.</string>
+    <string name="txtRating">Calificar:</string>
     <string name="txtCurrentLocation">Real Plaza Cajamarca</string>
     <string name="txtConfig">Configuración</string>
     <string name="txtProfile">Perfil</string>
     <string name="txtAlert">Notificaciones</string>
+    <string name="txtDriver">Chofer:</string>
     <string name="bus_context_desc">Bus</string>
     <string name="total">Total</string>
     <string name="txt_no_route_title">Selecciona una ruta</string>
