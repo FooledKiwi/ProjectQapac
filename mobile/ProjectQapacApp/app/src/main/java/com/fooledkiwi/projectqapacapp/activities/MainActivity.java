@@ -1,15 +1,9 @@
 package com.fooledkiwi.projectqapacapp.activities;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -33,28 +27,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         loadBottomMenuInteraction();
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissionLauncher.launch(new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            });
-        }
     }
-
-    private final ActivityResultLauncher<String[]> requestPermissionLauncher =
-        registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-            Boolean fineGranted = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
-            Boolean coarseGranted = result.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false);
-
-            if ((fineGranted != null && fineGranted) || (coarseGranted != null && coarseGranted)) {
-                // El usuario aceptó el permiso en la ventana emergente
-                Toast.makeText(this, "Gracias por compartir tu ubicación", Toast.LENGTH_LONG).show();
-            } else {
-                // El usuario denegó el permiso
-                Toast.makeText(this, "Necesitamos tu ubicación para mostrarte el mapa correctamente", Toast.LENGTH_LONG).show();
-            }
-        });
 
     public void loadBottomMenuInteraction() {
         ViewPager2 viewPager = findViewById(R.id.vp2_mainPager);

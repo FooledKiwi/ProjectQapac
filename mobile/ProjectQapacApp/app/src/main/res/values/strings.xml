@@ -64,4 +64,7 @@
     <string name="total">Total</string>
     <string name="txt_no_route_title">Selecciona una ruta</string>
     <string name="txt_no_route_subtitle">Toca un marcador en el mapa para ver la información</string>
+    <string name="txt_no_permission_title">Ubicación no disponible</string>
+    <string name="txt_no_permission_subtitle">La aplicación necesita acceso a tu ubicación para mostrarte el mapa correctamente</string>
+    <string name="txt_no_permission_button">Permitir acceso a ubicación</string>
 </resources>

@@ -41,7 +41,7 @@ public class FirstTimeActivity extends AppCompatActivity {
     }
 
     public void enterAsGuest(View vw) {
-
+        gotoMain();
     }
 
     public void gotoAuth(String action) {
