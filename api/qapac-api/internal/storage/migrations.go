@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"github.com/dom1nux/qapac-api/internal/migrations"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/migrations"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

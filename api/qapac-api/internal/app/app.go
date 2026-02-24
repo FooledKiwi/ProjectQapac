@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dom1nux/qapac-api/internal/config"
-	"github.com/dom1nux/qapac-api/internal/handler"
-	"github.com/dom1nux/qapac-api/internal/middleware"
-	"github.com/dom1nux/qapac-api/internal/routing"
-	"github.com/dom1nux/qapac-api/internal/service"
-	"github.com/dom1nux/qapac-api/internal/storage"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/config"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/handler"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/middleware"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/routing"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/service"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

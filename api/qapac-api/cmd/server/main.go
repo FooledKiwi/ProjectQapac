@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dom1nux/qapac-api/internal/app"
-	"github.com/dom1nux/qapac-api/internal/config"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/app"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/config"
 )
 
 func main() {

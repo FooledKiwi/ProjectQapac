@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dom1nux/qapac-api/internal/generated/db"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/generated/db"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

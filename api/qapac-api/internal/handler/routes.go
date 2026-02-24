@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dom1nux/qapac-api/internal/service"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
