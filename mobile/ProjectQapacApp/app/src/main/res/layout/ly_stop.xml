@@ -40,9 +40,10 @@
         android:id="@+id/btnFavorite"
         android:layout_height="50dp"
         android:layout_width="50dp"
-        android:buttonTint="@null"
+
         android:layout_marginStart="20dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:button="@drawable/selector_favorite"
+        android:background="@drawable/selector_favorite"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:button="@null"
         />
 </LinearLayout>

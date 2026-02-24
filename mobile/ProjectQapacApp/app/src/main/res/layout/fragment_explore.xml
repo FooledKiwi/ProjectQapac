@@ -24,10 +24,12 @@
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/ll_bottom_sheet"
-        style="@style/cardViewRoundedStyle"
+        style="@style/MaterialAlertDialog.Material3"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
         app:layout_insetEdge="bottom"
+        app:shapeAppearanceOverlay="@style/MediumCorners"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent"
         app:behavior_peekHeight="120dp"
         app:behavior_hideable="false">
 
@@ -40,7 +42,7 @@
             android:layout_width="40dp"
             android:layout_height="4dp"
             android:layout_gravity="center_horizontal"
-            android:background="@color/purple_dark" />
+            />
 
         <include
             android:id="@+id/layoutNoRoute"
@@ -59,16 +61,17 @@
             <include
                 layout="@layout/ly_stop" />
             <LinearLayout
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="20dp"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <androidx.cardview.widget.CardView
-                    app:cardCornerRadius="13dp"
-                    android:backgroundTint="@color/yellow"
+                    app:cardCornerRadius="30dp"
+                    app:cardBackgroundColor="?attr/colorPrimary"
                     android:layout_width="60dp"
                     android:layout_height="60dp">
                     <ImageView
+                        android:contentDescription="@string/text_time"
                         android:layout_margin="15dp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -110,6 +113,6 @@
         android:layout_marginBottom="20dp"
         android:contentDescription="@string/txt_no_route_subtitle"
         android:elevation="5dp"
-        android:src="@drawable/icon_search_location_white"
+        android:src="@drawable/icon_search_location"
         app:layout_dodgeInsetEdges="bottom" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

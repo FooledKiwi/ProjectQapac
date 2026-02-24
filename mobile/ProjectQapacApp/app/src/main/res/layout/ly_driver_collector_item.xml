@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     app:cardCornerRadius="15dp"
     app:cardElevation="2dp"
-    app:cardBackgroundColor="@color/bone"
+
     android:orientation="horizontal"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto">
@@ -36,7 +36,6 @@
         <TextView
             android:id="@+id/tvNameAdmin"
             style="@style/headingTwo"
-            android:backgroundTint="@color/bone"
             android:text="Carlos Rallirgos"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>

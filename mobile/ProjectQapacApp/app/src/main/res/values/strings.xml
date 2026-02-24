@@ -12,6 +12,9 @@
     <string name="text_insert_phone">Teléfono</string>
     <string name="text_password">Contraseña</string>
     <string name="explore">Explorar</string>
+    <string name="title_planner">Planificador de Viaje"</string>
+    <string name="txt_current_location">Mi Ubicación Actual</string>
+    <string name="txt_destination_location">Ubicación Destino</string>
     <string name="history">Historial</string>
     <string name="alarms">Notificaciones</string>
     <string name="rating">Calificaciones</string>

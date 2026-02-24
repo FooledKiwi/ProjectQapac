@@ -2,11 +2,12 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.ProjectQapacApp" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:colorBackground">@color/darkModeContent</item>
-        <item name="colorSurface">#2B2930</item>
         <item name="colorOnSurface">@color/bone</item>
+        <item name="colorSurface">#2B2930</item>
+        <item name="colorOnSurfaceVariant">@color/gray</item>
         <item name="colorPrimary">@color/magenta_light</item>
         <item name="colorOnPrimary">@color/purple</item>
-
+        <item name="colorSecondary">@color/yellow</item>
     </style>
 
     <style name="ProfilePassenger">
