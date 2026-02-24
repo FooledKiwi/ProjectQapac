@@ -1,0 +1,230 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Feature Branch CI
+#
+# Runs on every push to any branch except `main` and `staging`.
+#
+# A `changes` job first detects which components were modified:
+#   api    : any file under api/
+#   mobile : any file under mobile/
+#
+# Stage 1 — Code Quality (parallel, gated by component change)
+#   lint-api        : golangci-lint on the Go REST API
+#   lint-android    : ./gradlew lint on the Android app
+#
+# Stage 2 — Unit Tests (depends on Stage 1, parallel)
+#   check-api-tests     : detect real Go unit test files
+#   test-api            : run Go unit tests (skipped if none detected)
+#   check-android-tests : detect real Android @Test methods
+#   test-android        : run Android unit tests (skipped if none detected)
+#
+# Branch protection should require `test-api` and `test-android` to pass
+# (skipped counts as passing) before allowing a merge to `staging`.
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Feature Branch CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - staging
+
+jobs:
+  # ── Detect changed components ───────────────────────────────────────────────
+
+  changes:
+    name: "Detect changed components"
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api:
+              - 'api/**'
+            mobile:
+              - 'mobile/**'
+
+  # ── Stage 1: Code Quality ───────────────────────────────────────────────────
+
+  lint-api:
+    name: "Lint / Go API"
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.api == 'true'
+    defaults:
+      run:
+        working-directory: api/qapac-api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: api/qapac-api/go.sum
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: api/qapac-api
+
+  lint-android:
+    name: "Lint / Android App"
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.mobile == 'true'
+    defaults:
+      run:
+        working-directory: mobile/ProjectQapacApp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: gradle
+
+      - name: Grant Gradle wrapper execute permission
+        run: chmod +x gradlew
+
+      - name: Run Android Lint
+        run: ./gradlew lint
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-lint-report
+          path: mobile/ProjectQapacApp/app/build/reports/lint-results-*.html
+          if-no-files-found: ignore
+
+  # ── Stage 2: Unit Tests ─────────────────────────────────────────────────────
+
+  check-api-tests:
+    name: "Check / Go unit tests exist"
+    runs-on: ubuntu-latest
+    needs: [lint-api]
+    outputs:
+      has_tests: ${{ steps.detect.outputs.has_tests }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect real Go unit test files
+        id: detect
+        # A real unit test file is any *_test.go that does NOT carry the
+        # `//go:build integration` tag. We exclude the generated code directory.
+        run: |
+          count=$(grep -rl --include='*_test.go' '' api/qapac-api \
+                    --exclude-dir=internal/generated \
+                    | xargs grep -L '//go:build integration' 2>/dev/null | wc -l)
+          echo "Found $count Go unit test file(s)"
+          if [ "$count" -gt 0 ]; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  test-api:
+    name: "Unit Tests / Go API"
+    runs-on: ubuntu-latest
+    needs: [check-api-tests]
+    if: needs.check-api-tests.outputs.has_tests == 'true'
+    defaults:
+      run:
+        working-directory: api/qapac-api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: api/qapac-api/go.sum
+
+      - name: Run unit tests
+        # Exclude integration-tagged tests; run all others.
+        run: go test -v -count=1 ./...
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-unit-test-results
+          path: api/qapac-api/test-results/
+          if-no-files-found: ignore
+
+  check-android-tests:
+    name: "Check / Android unit tests exist"
+    runs-on: ubuntu-latest
+    needs: [lint-android]
+    outputs:
+      has_tests: ${{ steps.detect.outputs.has_tests }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect real Android unit test methods
+        id: detect
+        # Look for @Test annotations under src/test (JVM unit tests only).
+        # Excludes the default AS stubs (addition_isCorrect / useAppContext).
+        run: |
+          count=$(grep -rl '@Test' \
+                    mobile/ProjectQapacApp/app/src/test \
+                    2>/dev/null \
+                  | xargs grep -l '@Test' 2>/dev/null \
+                  | xargs grep -v 'addition_isCorrect\|useAppContext' 2>/dev/null \
+                  | wc -l)
+          echo "Found $count Android unit test file(s) with real @Test methods"
+          if [ "$count" -gt 0 ]; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  test-android:
+    name: "Unit Tests / Android App"
+    runs-on: ubuntu-latest
+    needs: [check-android-tests]
+    if: needs.check-android-tests.outputs.has_tests == 'true'
+    defaults:
+      run:
+        working-directory: mobile/ProjectQapacApp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: gradle
+
+      - name: Grant Gradle wrapper execute permission
+        run: chmod +x gradlew
+
+      - name: Run Android unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-results
+          path: mobile/ProjectQapacApp/app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore

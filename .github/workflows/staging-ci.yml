@@ -1,0 +1,210 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Staging Branch CI
+#
+# Runs on every push to `staging`.
+#
+# A `changes` job first detects which components were modified:
+#   api    : any file under api/
+#   mobile : any file under mobile/
+#
+# Stage 1 — Integration Tests (api changes only)
+#   check-integration-tests : detect *_test.go files tagged //go:build integration
+#   integration-test-api    : run Go integration tests against a live PostGIS DB
+#                             (skipped if no api changes or no integration tests)
+#
+# Stage 2 — Build & Package (parallel, gated by component change)
+#   build-apk       : assemble a debug APK and upload it as a run artifact
+#                     (skipped if no mobile changes)
+#   build-api-image : build a Docker image and push to GHCR
+#                     (skipped if no api changes)
+#
+# Stage 2 build jobs are also gated on integration-test-api: they run only if
+# the integration job passed or was skipped (no tests / no api changes).
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Staging CI
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  # ── Detect changed components ───────────────────────────────────────────────
+
+  changes:
+    name: "Detect changed components"
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api:
+              - 'api/**'
+            mobile:
+              - 'mobile/**'
+
+  # ── Stage 1: Integration Tests ──────────────────────────────────────────────
+
+  check-integration-tests:
+    name: "Check / Integration tests exist"
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.api == 'true'
+    outputs:
+      has_tests: ${{ steps.detect.outputs.has_tests }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect Go integration test files
+        id: detect
+        # Integration tests are *_test.go files that carry the
+        # `//go:build integration` build constraint.
+        run: |
+          count=$(grep -rl '//go:build integration' api/qapac-api \
+                    --include='*_test.go' 2>/dev/null | wc -l)
+          echo "Found $count integration test file(s)"
+          if [ "$count" -gt 0 ]; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  integration-test-api:
+    name: "Integration Tests / Go API"
+    runs-on: ubuntu-latest
+    needs: [check-integration-tests]
+    if: needs.check-integration-tests.outputs.has_tests == 'true'
+    defaults:
+      run:
+        working-directory: api/qapac-api
+
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: qapac_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_DSN: postgres://postgres:postgres@localhost:5432/qapac_test?sslmode=disable
+      GOOGLE_API_KEY: ""
+      PORT: "8080"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: api/qapac-api/go.sum
+
+      - name: Run integration tests
+        run: go test -v -count=1 -tags integration ./...
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-integration-test-results
+          path: api/qapac-api/test-results/
+          if-no-files-found: ignore
+
+  # ── Stage 2: Build & Package ────────────────────────────────────────────────
+  #
+  # Each build job is gated on its component having changed AND on the
+  # integration test result (passed or skipped — never failed).
+
+  build-apk:
+    name: "Build / Android Debug APK"
+    runs-on: ubuntu-latest
+    needs: [changes, integration-test-api]
+    if: |
+      always() &&
+      needs.changes.outputs.mobile == 'true' &&
+      (needs.integration-test-api.result == 'success' ||
+       needs.integration-test-api.result == 'skipped')
+    defaults:
+      run:
+        working-directory: mobile/ProjectQapacApp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: gradle
+
+      - name: Grant Gradle wrapper execute permission
+        run: chmod +x gradlew
+
+      - name: Assemble debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qapac-debug-${{ github.sha }}
+          path: mobile/ProjectQapacApp/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  build-api-image:
+    name: "Build / Go API Docker Image"
+    runs-on: ubuntu-latest
+    needs: [changes, integration-test-api]
+    if: |
+      always() &&
+      needs.changes.outputs.api == 'true' &&
+      (needs.integration-test-api.result == 'success' ||
+       needs.integration-test-api.result == 'skipped')
+    permissions:
+      contents: read
+      packages: write   # Required to push to GHCR
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: api/qapac-api
+          file: api/qapac-api/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/fooledkiwi/projectqapac/qapac-api:staging
+            ghcr.io/fooledkiwi/projectqapac/qapac-api:staging-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
