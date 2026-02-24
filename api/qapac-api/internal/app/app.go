@@ -100,6 +100,12 @@ func New(cfg *config.Config) (*App, error) {
 	vehiclesRepo := storage.NewVehiclesRepository(pool)
 	alertsRepo := storage.NewAlertsRepository(pool)
 
+	// Public dependencies.
+	publicRoutesRepo := storage.NewPublicRoutesRepository(pool)
+	positionsRepo := storage.NewVehiclePositionsRepository(pool)
+	ratingsRepo := storage.NewRatingsRepository(pool)
+	favoritesRepo := storage.NewFavoritesRepository(pool)
+
 	// --- HTTP engine ---
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -115,6 +121,7 @@ func New(cfg *config.Config) (*App, error) {
 	h := handler.New(stopsRepo, etaService, routingService)
 	ah := handler.NewAuthHandler(authService)
 	adminH := handler.NewAdminHandler(usersRepo, vehiclesRepo, alertsRepo)
+	pubH := handler.NewPublicHandler(publicRoutesRepo, positionsRepo, alertsRepo, ratingsRepo, favoritesRepo)
 
 	api := router.Group("/api/v1")
 	{
@@ -122,6 +129,27 @@ func New(cfg *config.Config) (*App, error) {
 		api.GET("/stops/nearby", h.ListStopsNear)
 		api.GET("/stops/:id", h.GetStop)
 		api.GET("/routes/to-stop", h.GetRouteToStop)
+
+		// Routes (public).
+		api.GET("/routes", pubH.ListRoutes)
+		api.GET("/routes/:id", pubH.GetRoute)
+		api.GET("/routes/:id/vehicles", pubH.GetRouteVehicles)
+
+		// Vehicle positions (public).
+		api.GET("/vehicles/nearby", pubH.NearbyVehicles)
+		api.GET("/vehicles/:id/position", pubH.GetVehiclePosition)
+
+		// Alerts (public read).
+		api.GET("/alerts", pubH.ListAlerts)
+		api.GET("/alerts/:id", pubH.GetAlert)
+
+		// Ratings (anonymous).
+		api.POST("/ratings", pubH.CreateRating)
+
+		// Favorites (anonymous, by device_id).
+		api.GET("/favorites", pubH.ListFavorites)
+		api.POST("/favorites", pubH.AddFavorite)
+		api.DELETE("/favorites", pubH.RemoveFavorite)
 
 		// Auth endpoints (no auth required to call these).
 		auth := api.Group("/auth")
