@@ -103,6 +103,7 @@
         </androidx.cardview.widget.CardView>
     </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvHistory"
         app:layout_constraintTop_toBottomOf="@+id/txtHistory"
         android:layout_width="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
