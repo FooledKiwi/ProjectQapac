@@ -39,6 +39,16 @@ type UsersRepository interface {
 
 	// GetUserByID returns a user by ID, or (nil, nil) if not found.
 	GetUserByID(ctx context.Context, id int32) (*User, error)
+
+	// ListUsers returns users filtered by optional role and active status.
+	// Pass empty role to list all roles.
+	ListUsers(ctx context.Context, role string, activeOnly bool) ([]User, error)
+
+	// UpdateUser updates mutable fields on a user.
+	UpdateUser(ctx context.Context, u *User) error
+
+	// DeactivateUser performs a soft-delete by setting active = false.
+	DeactivateUser(ctx context.Context, id int32) error
 }
 
 // RefreshTokensRepository defines operations on the refresh_tokens table.

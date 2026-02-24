@@ -88,6 +88,78 @@ func (r *pgUsersRepository) GetUserByID(ctx context.Context, id int32) (*User, e
 	return u, nil
 }
 
+func (r *pgUsersRepository) ListUsers(ctx context.Context, role string, activeOnly bool) ([]User, error) {
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
+	defer cancel()
+
+	query := `SELECT id, username, password_hash, full_name, COALESCE(phone, ''), role,
+	                  COALESCE(profile_image_path, ''), active, created_at, updated_at
+	           FROM users WHERE 1=1`
+	args := []interface{}{}
+	argIdx := 1
+
+	if role != "" {
+		query += fmt.Sprintf(" AND role = $%d", argIdx)
+		args = append(args, role)
+		argIdx++
+	}
+	if activeOnly {
+		query += " AND active = true"
+	}
+	query += " ORDER BY created_at DESC"
+
+	rows, err := r.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("storage: ListUsers: %w", err)
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.FullName, &u.Phone, &u.Role,
+			&u.ProfileImagePath, &u.Active, &u.CreatedAt, &u.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("storage: ListUsers: scan: %w", err)
+		}
+		users = append(users, u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("storage: ListUsers: rows: %w", err)
+	}
+
+	return users, nil
+}
+
+func (r *pgUsersRepository) UpdateUser(ctx context.Context, u *User) error {
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
+	defer cancel()
+
+	_, err := r.pool.Exec(ctx,
+		`UPDATE users
+		 SET full_name = $1, phone = $2, role = $3, profile_image_path = $4, active = $5, updated_at = NOW()
+		 WHERE id = $6`,
+		u.FullName, u.Phone, u.Role, u.ProfileImagePath, u.Active, u.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("storage: UpdateUser: %w", err)
+	}
+	return nil
+}
+
+func (r *pgUsersRepository) DeactivateUser(ctx context.Context, id int32) error {
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
+	defer cancel()
+
+	_, err := r.pool.Exec(ctx,
+		`UPDATE users SET active = false, updated_at = NOW() WHERE id = $1`,
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("storage: DeactivateUser: %w", err)
+	}
+	return nil
+}
+
 // pgRefreshTokensRepository is the pgx-backed implementation of RefreshTokensRepository.
 type pgRefreshTokensRepository struct {
 	pool *pgxpool.Pool

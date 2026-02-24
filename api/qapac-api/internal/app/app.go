@@ -96,6 +96,10 @@ func New(cfg *config.Config) (*App, error) {
 		cfg.RefreshTokenTTL,
 	)
 
+	// Admin dependencies.
+	vehiclesRepo := storage.NewVehiclesRepository(pool)
+	alertsRepo := storage.NewAlertsRepository(pool)
+
 	// --- HTTP engine ---
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -110,6 +114,7 @@ func New(cfg *config.Config) (*App, error) {
 	// API v1 routes.
 	h := handler.New(stopsRepo, etaService, routingService)
 	ah := handler.NewAuthHandler(authService)
+	adminH := handler.NewAdminHandler(usersRepo, vehiclesRepo, alertsRepo)
 
 	api := router.Group("/api/v1")
 	{
@@ -139,7 +144,23 @@ func New(cfg *config.Config) (*App, error) {
 		admin.Use(middleware.JWTAuth(authService))
 		admin.Use(middleware.RequireRole("admin"))
 		{
-			// Admin-specific endpoints will be registered here in Phase 3.
+			// User management.
+			admin.POST("/users", adminH.CreateUser)
+			admin.GET("/users", adminH.ListUsers)
+			admin.GET("/users/:id", adminH.GetUser)
+			admin.PUT("/users/:id", adminH.UpdateUser)
+			admin.DELETE("/users/:id", adminH.DeactivateUser)
+
+			// Vehicle management.
+			admin.POST("/vehicles", adminH.CreateVehicle)
+			admin.GET("/vehicles", adminH.ListVehicles)
+			admin.GET("/vehicles/:id", adminH.GetVehicle)
+			admin.PUT("/vehicles/:id", adminH.UpdateVehicle)
+			admin.POST("/vehicles/:id/assign", adminH.AssignVehicle)
+
+			// Alert management.
+			admin.POST("/alerts", adminH.CreateAlert)
+			admin.DELETE("/alerts/:id", adminH.DeleteAlert)
 		}
 	}
 
