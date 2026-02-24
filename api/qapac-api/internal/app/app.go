@@ -86,6 +86,16 @@ func New(cfg *config.Config) (*App, error) {
 	etaStore := service.NewPgETACacheStore(pool)
 	etaService := service.NewETAService(etaProvider, etaStore)
 
+	// Auth dependencies.
+	usersRepo := storage.NewUsersRepository(pool)
+	tokensRepo := storage.NewRefreshTokensRepository(pool)
+	authService := service.NewAuthService(
+		usersRepo, tokensRepo,
+		cfg.JWTSecret,
+		cfg.AccessTokenTTL,
+		cfg.RefreshTokenTTL,
+	)
+
 	// --- HTTP engine ---
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -99,12 +109,38 @@ func New(cfg *config.Config) (*App, error) {
 
 	// API v1 routes.
 	h := handler.New(stopsRepo, etaService, routingService)
+	ah := handler.NewAuthHandler(authService)
 
 	api := router.Group("/api/v1")
 	{
+		// Public endpoints (no auth required).
 		api.GET("/stops/nearby", h.ListStopsNear)
 		api.GET("/stops/:id", h.GetStop)
 		api.GET("/routes/to-stop", h.GetRouteToStop)
+
+		// Auth endpoints (no auth required to call these).
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", ah.Login)
+			auth.POST("/refresh", ah.Refresh)
+			auth.POST("/logout", ah.Logout)
+		}
+
+		// Protected endpoints: driver role.
+		driver := api.Group("/driver")
+		driver.Use(middleware.JWTAuth(authService))
+		driver.Use(middleware.RequireRole("driver", "admin"))
+		{
+			// Driver-specific endpoints will be registered here in Phase 5.
+		}
+
+		// Protected endpoints: admin role.
+		admin := api.Group("/admin")
+		admin.Use(middleware.JWTAuth(authService))
+		admin.Use(middleware.RequireRole("admin"))
+		{
+			// Admin-specific endpoints will be registered here in Phase 3.
+		}
 	}
 
 	return &App{

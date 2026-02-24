@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 // ConfigError represents a configuration error.
@@ -22,6 +23,11 @@ type Config struct {
 	DBDSN        string
 	GoogleAPIKey string
 	Port         int
+
+	// JWT authentication settings.
+	JWTSecret       string // Required for auth endpoints; signing key for HS256.
+	AccessTokenTTL  time.Duration
+	RefreshTokenTTL time.Duration
 }
 
 // Load reads and validates required environment variables.
@@ -37,6 +43,12 @@ func Load() (*Config, error) {
 
 	cfg.GoogleAPIKey = os.Getenv("GOOGLE_API_KEY")
 	// Not strictly required for bootstrap; warn but don't fail.
+
+	cfg.JWTSecret = os.Getenv("JWT_SECRET")
+	// Not required at startup; auth endpoints will fail gracefully if unset.
+
+	cfg.AccessTokenTTL = parseDurationEnv("ACCESS_TOKEN_TTL", 15*time.Minute)
+	cfg.RefreshTokenTTL = parseDurationEnv("REFRESH_TOKEN_TTL", 7*24*time.Hour)
 
 	portStr := os.Getenv("PORT")
 	if portStr == "" {
@@ -65,4 +77,19 @@ func (c *Config) Validate() error {
 		errs = append(errs, &ConfigError{Field: "PORT", Message: "must be between 1 and 65535"})
 	}
 	return errors.Join(errs...)
+}
+
+// parseDurationEnv reads a duration from an environment variable.
+// Falls back to defaultVal if the variable is unset or unparseable.
+// Accepts Go duration strings like "15m", "24h", "168h".
+func parseDurationEnv(key string, defaultVal time.Duration) time.Duration {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return defaultVal
+	}
+	d, err := time.ParseDuration(raw)
+	if err != nil {
+		return defaultVal
+	}
+	return d
 }
