@@ -48,7 +48,7 @@ func (h *UploadHandler) UploadImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing or invalid 'file' field"})
 		return
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	// Validate content type.
 	contentType := header.Header.Get("Content-Type")
@@ -56,7 +56,7 @@ func (h *UploadHandler) UploadImage(c *gin.Context) {
 	if !ok {
 		// Fall back to sniffing the first 512 bytes.
 		buf := make([]byte, 512)
-		n, _ := file.Read(buf)
+		n, _ := file.Read(buf) //nolint:errcheck // best-effort sniff
 		detected := http.DetectContentType(buf[:n])
 		ext, ok = allowedMIME[detected]
 		if !ok {
@@ -67,7 +67,7 @@ func (h *UploadHandler) UploadImage(c *gin.Context) {
 		}
 		// Reset reader position.
 		if seeker, seekOK := file.(io.Seeker); seekOK {
-			_, _ = seeker.Seek(0, io.SeekStart)
+			_, _ = seeker.Seek(0, io.SeekStart) //nolint:errcheck
 		}
 	}
 
@@ -80,11 +80,11 @@ func (h *UploadHandler) UploadImage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
 		return
 	}
-	defer dst.Close()
+	defer dst.Close() //nolint:errcheck
 
 	if _, err := io.Copy(dst, file); err != nil {
 		// Clean up partial file.
-		_ = os.Remove(destPath)
+		_ = os.Remove(destPath) //nolint:errcheck // best-effort cleanup
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
 		return
 	}

@@ -301,8 +301,8 @@ func (h *AdminHandler) GetVehicle(c *gin.Context) {
 		return
 	}
 
-	// Also fetch assignment.
-	assignment, _ := h.vehiclesRepo.GetActiveAssignment(c.Request.Context(), id)
+	// Also fetch assignment (non-fatal if absent).
+	assignment, _ := h.vehiclesRepo.GetActiveAssignment(c.Request.Context(), id) //nolint:errcheck
 
 	resp := gin.H{
 		"id":           vehicle.ID,
@@ -398,7 +398,7 @@ func (h *AdminHandler) AssignVehicle(c *gin.Context) {
 	}
 
 	var req assignVehicleRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err = c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -447,8 +447,9 @@ func (h *AdminHandler) CreateAlert(c *gin.Context) {
 	// Get creator ID from JWT claims.
 	var createdBy *int32
 	if uid, exists := c.Get("auth_user_id"); exists {
-		id := uid.(int32)
-		createdBy = &id
+		if id, ok := uid.(int32); ok {
+			createdBy = &id
+		}
 	}
 
 	alert := &storage.Alert{

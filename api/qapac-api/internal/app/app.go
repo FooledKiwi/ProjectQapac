@@ -1,3 +1,4 @@
+// Package app assembles and runs the qapac-api HTTP server.
 package app
 
 import (

@@ -92,7 +92,7 @@ func TestRowToStop(t *testing.T) {
 		name     string
 		id       int32
 		stopName string
-		geom     interface{}
+		geom     any
 		wantErr  bool
 		wantLat  float64
 		wantLon  float64

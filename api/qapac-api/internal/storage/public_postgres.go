@@ -84,10 +84,11 @@ func (r *pgPublicRoutesRepository) GetRouteDetail(ctx context.Context, id int32)
 	for stopRows.Next() {
 		var rs RouteStop
 		var geomWKT string
-		if err := stopRows.Scan(&rs.ID, &rs.Name, &geomWKT, &rs.Sequence); err != nil {
+		if err = stopRows.Scan(&rs.ID, &rs.Name, &geomWKT, &rs.Sequence); err != nil {
 			return nil, fmt.Errorf("storage: GetRouteDetail: stops scan: %w", err)
 		}
-		lat, lon, err := parsePointWKT(geomWKT)
+		var lat, lon float64
+		lat, lon, err = parsePointWKT(geomWKT)
 		if err != nil {
 			return nil, fmt.Errorf("storage: GetRouteDetail: parse stop geom: %w", err)
 		}
@@ -95,7 +96,7 @@ func (r *pgPublicRoutesRepository) GetRouteDetail(ctx context.Context, id int32)
 		rs.Lon = lon
 		rd.Stops = append(rd.Stops, rs)
 	}
-	if err := stopRows.Err(); err != nil {
+	if err = stopRows.Err(); err != nil {
 		return nil, fmt.Errorf("storage: GetRouteDetail: stops rows: %w", err)
 	}
 
@@ -117,17 +118,17 @@ func (r *pgPublicRoutesRepository) GetRouteDetail(ctx context.Context, id int32)
 
 	for vehRows.Next() {
 		var rv RouteVehicle
-		if err := vehRows.Scan(&rv.ID, &rv.PlateNumber, &rv.Status, &rv.DriverName, &rv.CollectorName); err != nil {
+		if err = vehRows.Scan(&rv.ID, &rv.PlateNumber, &rv.Status, &rv.DriverName, &rv.CollectorName); err != nil {
 			return nil, fmt.Errorf("storage: GetRouteDetail: vehicles scan: %w", err)
 		}
 		rd.Vehicles = append(rd.Vehicles, rv)
 	}
-	if err := vehRows.Err(); err != nil {
+	if err = vehRows.Err(); err != nil {
 		return nil, fmt.Errorf("storage: GetRouteDetail: vehicles rows: %w", err)
 	}
 
 	// Fetch route shape polyline.
-	var geom interface{}
+	var geom any
 	err = r.pool.QueryRow(ctx,
 		`SELECT ST_AsText(geom) FROM route_shapes WHERE route_id = $1`, id,
 	).Scan(&geom)

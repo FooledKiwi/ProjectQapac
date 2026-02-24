@@ -87,7 +87,7 @@ func (s *ETAService) GetETAForStop(ctx context.Context, stopID int32) (seconds i
 	}
 
 	// --- cache read ---
-	cached, found, _ := s.store.GetCachedETA(ctx, stopID)
+	cached, found, _ := s.store.GetCachedETA(ctx, stopID) //nolint:errcheck // cache miss is non-fatal
 	if found {
 		return cached, "cache", nil
 	}
@@ -110,7 +110,7 @@ func (s *ETAService) GetETAForStop(ctx context.Context, stopID int32) (seconds i
 	}
 
 	// --- cache write (best-effort) ---
-	_ = s.store.SetCachedETA(ctx, stopID, secs)
+	_ = s.store.SetCachedETA(ctx, stopID, secs) //nolint:errcheck // best-effort cache write
 
 	return secs, src, nil
 }

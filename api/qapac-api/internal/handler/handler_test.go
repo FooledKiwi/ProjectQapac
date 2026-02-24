@@ -184,7 +184,7 @@ func TestListStopsNear_EmptyResult(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("status = %d, want 200", w.Code)
 	}
-	var result []interface{}
+	var result []any
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
@@ -210,7 +210,7 @@ func TestListStopsNear_Success(t *testing.T) {
 		t.Errorf("status = %d, want 200", w.Code)
 	}
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
@@ -221,7 +221,7 @@ func TestListStopsNear_Success(t *testing.T) {
 		t.Errorf("first stop name = %q, want %q", result[0]["name"], "Paradero Centro")
 	}
 	// JSON numbers decode to float64.
-	if result[0]["id"].(float64) != 1 {
+	if id, ok := result[0]["id"].(float64); !ok || id != 1 {
 		t.Errorf("first stop id = %v, want 1", result[0]["id"])
 	}
 }
@@ -314,7 +314,7 @@ func TestGetStop_Success(t *testing.T) {
 		t.Errorf("status = %d, want 200", w.Code)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
@@ -322,7 +322,7 @@ func TestGetStop_Success(t *testing.T) {
 	if result["name"] != "Miraflores" {
 		t.Errorf("name = %q, want %q", result["name"], "Miraflores")
 	}
-	if result["eta_seconds"].(float64) != 240 {
+	if eta, ok := result["eta_seconds"].(float64); !ok || eta != 240 {
 		t.Errorf("eta_seconds = %v, want 240", result["eta_seconds"])
 	}
 }
@@ -343,11 +343,11 @@ func TestGetStop_ETAErrorNonFatal(t *testing.T) {
 		t.Errorf("status = %d, want 200", w.Code)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
-	if result["eta_seconds"].(float64) != 0 {
+	if eta, ok := result["eta_seconds"].(float64); !ok || eta != 0 {
 		t.Errorf("eta_seconds = %v, want 0 when ETA fails", result["eta_seconds"])
 	}
 }
@@ -463,7 +463,7 @@ func TestGetRouteToStop_Success(t *testing.T) {
 		t.Errorf("status = %d, want 200", w.Code)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
@@ -471,13 +471,13 @@ func TestGetRouteToStop_Success(t *testing.T) {
 	if result["polyline"] != "encodedPoly" {
 		t.Errorf("polyline = %q, want %q", result["polyline"], "encodedPoly")
 	}
-	if result["distance_m"].(float64) != 800 {
+	if dist, ok := result["distance_m"].(float64); !ok || dist != 800 {
 		t.Errorf("distance_m = %v, want 800", result["distance_m"])
 	}
-	if result["duration_s"].(float64) != 420 {
+	if dur, ok := result["duration_s"].(float64); !ok || dur != 420 {
 		t.Errorf("duration_s = %v, want 420", result["duration_s"])
 	}
-	if result["is_fallback"].(bool) != false {
+	if fb, ok := result["is_fallback"].(bool); !ok || fb != false {
 		t.Errorf("is_fallback = %v, want false", result["is_fallback"])
 	}
 }
@@ -504,11 +504,11 @@ func TestGetRouteToStop_FallbackExposed(t *testing.T) {
 		t.Errorf("status = %d, want 200", w.Code)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
-	if result["is_fallback"].(bool) != true {
+	if fb, ok := result["is_fallback"].(bool); !ok || fb != true {
 		t.Errorf("is_fallback = %v, want true", result["is_fallback"])
 	}
 	if result["polyline"] != "" {

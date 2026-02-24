@@ -1,3 +1,4 @@
+// Package storage provides PostgreSQL-backed repository implementations.
 package storage
 
 import "context"

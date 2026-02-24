@@ -1,3 +1,4 @@
+// Package service contains business logic and service-layer orchestration.
 package service
 
 import (
@@ -76,7 +77,7 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*To
 		return nil, nil, ErrInvalidCredentials
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return nil, nil, ErrInvalidCredentials
 	}
 
@@ -112,7 +113,7 @@ func (s *AuthService) Refresh(ctx context.Context, rawRefreshToken string) (*Tok
 	}
 
 	// Revoke old token (rotation).
-	if err := s.tokensRepo.RevokeRefreshToken(ctx, tokenHash); err != nil {
+	if err = s.tokensRepo.RevokeRefreshToken(ctx, tokenHash); err != nil {
 		return nil, fmt.Errorf("auth: revoke old token: %w", err)
 	}
 
@@ -147,7 +148,7 @@ func (s *AuthService) ValidateAccessToken(tokenString string) (*AuthClaims, erro
 		return nil, ErrJWTSecretMissing
 	}
 
-	token, err := jwt.ParseWithClaims(tokenString, &AuthClaims{}, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &AuthClaims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}

@@ -95,13 +95,12 @@ func (r *pgUsersRepository) ListUsers(ctx context.Context, role string, activeOn
 	query := `SELECT id, username, password_hash, full_name, COALESCE(phone, ''), role,
 	                  COALESCE(profile_image_path, ''), active, created_at, updated_at
 	           FROM users WHERE 1=1`
-	args := []interface{}{}
+	args := []any{}
 	argIdx := 1
 
 	if role != "" {
 		query += fmt.Sprintf(" AND role = $%d", argIdx)
 		args = append(args, role)
-		argIdx++
 	}
 	if activeOnly {
 		query += " AND active = true"

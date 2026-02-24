@@ -177,7 +177,7 @@ func applyEntry(ctx context.Context, pool *pgxpool.Pool, e entry) error {
 		return fmt.Errorf("begin tx: %w", err)
 	}
 
-	defer func() { _ = tx.Rollback(ctx) }()
+	defer func() { _ = tx.Rollback(ctx) }() //nolint:errcheck // rollback after commit is harmless
 
 	if _, err := tx.Exec(ctx, e.sql); err != nil {
 		return fmt.Errorf("exec sql: %w", err)

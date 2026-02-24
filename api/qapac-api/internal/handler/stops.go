@@ -100,8 +100,7 @@ func (h *Handler) GetStop(c *gin.Context) {
 		return
 	}
 
-	etaSecs, _, _ := h.etaService.GetETAForStop(c.Request.Context(), id)
-	// ETA errors are non-fatal: we still return stop data with eta_seconds = 0.
+	etaSecs, _, _ := h.etaService.GetETAForStop(c.Request.Context(), id) //nolint:errcheck // ETA errors are non-fatal: we still return stop data with eta_seconds = 0.
 
 	c.JSON(http.StatusOK, gin.H{
 		"id":          stop.ID,

@@ -66,7 +66,7 @@ func (r *pgVehiclesRepository) ListVehicles(ctx context.Context, routeID *int32,
 	defer cancel()
 
 	query := `SELECT id, plate_number, route_id, status, created_at FROM vehicles WHERE 1=1`
-	args := []interface{}{}
+	args := []any{}
 	argIdx := 1
 
 	if routeID != nil {
@@ -77,7 +77,6 @@ func (r *pgVehiclesRepository) ListVehicles(ctx context.Context, routeID *int32,
 	if status != "" {
 		query += fmt.Sprintf(" AND status = $%d", argIdx)
 		args = append(args, status)
-		argIdx++
 	}
 	query += " ORDER BY created_at DESC"
 
@@ -124,7 +123,7 @@ func (r *pgVehiclesRepository) AssignVehicle(ctx context.Context, a *VehicleAssi
 	if err != nil {
 		return nil, fmt.Errorf("storage: AssignVehicle: begin tx: %w", err)
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
+	defer func() { _ = tx.Rollback(ctx) }() //nolint:errcheck // rollback after commit is harmless
 
 	// Deactivate any existing active assignment for this vehicle.
 	_, err = tx.Exec(ctx,
@@ -240,7 +239,7 @@ func (r *pgAlertsRepository) ListAlerts(ctx context.Context, routeID *int32) ([]
 	query := `SELECT id, title, COALESCE(description, ''), route_id, COALESCE(vehicle_plate, ''),
 	                 COALESCE(image_path, ''), created_by, created_at
 	          FROM alerts`
-	args := []interface{}{}
+	args := []any{}
 
 	if routeID != nil {
 		query += " WHERE route_id = $1"

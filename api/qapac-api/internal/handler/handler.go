@@ -1,3 +1,4 @@
+// Package handler implements HTTP request handlers for the qapac-api.
 package handler
 
 import (
