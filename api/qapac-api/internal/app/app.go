@@ -106,6 +106,10 @@ func New(cfg *config.Config) (*App, error) {
 	ratingsRepo := storage.NewRatingsRepository(pool)
 	favoritesRepo := storage.NewFavoritesRepository(pool)
 
+	// Driver dependencies.
+	driverRepo := storage.NewDriverRepository(pool)
+	tripsRepo := storage.NewTripsRepository(pool)
+
 	// --- HTTP engine ---
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -122,6 +126,7 @@ func New(cfg *config.Config) (*App, error) {
 	ah := handler.NewAuthHandler(authService)
 	adminH := handler.NewAdminHandler(usersRepo, vehiclesRepo, alertsRepo)
 	pubH := handler.NewPublicHandler(publicRoutesRepo, positionsRepo, alertsRepo, ratingsRepo, favoritesRepo)
+	drvH := handler.NewDriverHandler(usersRepo, driverRepo, tripsRepo)
 
 	api := router.Group("/api/v1")
 	{
@@ -164,7 +169,12 @@ func New(cfg *config.Config) (*App, error) {
 		driver.Use(middleware.JWTAuth(authService))
 		driver.Use(middleware.RequireRole("driver", "admin"))
 		{
-			// Driver-specific endpoints will be registered here in Phase 5.
+			driver.POST("/position", drvH.ReportPosition)
+			driver.GET("/profile", drvH.GetProfile)
+			driver.PUT("/profile", drvH.UpdateProfile)
+			driver.GET("/assignment", drvH.GetAssignment)
+			driver.POST("/trips/start", drvH.StartTrip)
+			driver.POST("/trips/end", drvH.EndTrip)
 		}
 
 		// Protected endpoints: admin role.
