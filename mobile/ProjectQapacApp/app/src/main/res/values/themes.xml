@@ -9,7 +9,7 @@
         <item name="colorSecondary">@color/purple_light</item>
         <item name="colorOnPrimary">@color/gray</item>
 
-
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/purple</item>
         <item name="materialButtonStyle">@style/AppButton1</item>
         <item name="editTextStyle">@style/EditText1</item>
     </style>
