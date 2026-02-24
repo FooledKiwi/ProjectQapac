@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_alerts) {
                 viewPager.setCurrentItem(2, true);
                 return true;
-            } else if (itemId == R.id.nav_calificar) {
+            } else if (itemId == R.id.nav_cuenta) {
                 viewPager.setCurrentItem(3, true);
                 return true;
             }
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                         bottomNav.setSelectedItemId(R.id.nav_alerts);
                         break;
                     case 3:
-                        bottomNav.setSelectedItemId(R.id.nav_calificar);
+                        bottomNav.setSelectedItemId(R.id.nav_cuenta);
                         break;
                 }
             }
