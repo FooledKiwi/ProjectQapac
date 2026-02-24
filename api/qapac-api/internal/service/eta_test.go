@@ -83,7 +83,7 @@ func TestETAService_CacheHit(t *testing.T) {
 	primary := &mockETAProvider{seconds: 999, source: "gps"}
 	svc := NewETAService(primary, store)
 
-	_ = store.SetCachedETA(context.Background(), 1, 120)
+	_ = store.SetCachedETA(context.Background(), 1, 120) //nolint:errcheck
 
 	secs, source, err := svc.GetETAForStop(context.Background(), 1)
 
@@ -126,13 +126,13 @@ func TestETAService_CacheMiss_WritesCache(t *testing.T) {
 	primary := &mockETAProvider{seconds: 300, source: "simple"}
 	svc := NewETAService(primary, store)
 
-	_, _, _ = svc.GetETAForStop(context.Background(), 3)
+	_, _, _ = svc.GetETAForStop(context.Background(), 3) //nolint:errcheck
 
 	if store.setCalls != 1 {
 		t.Errorf("SetCachedETA called %d times, want 1", store.setCalls)
 	}
 	// Second call must be a cache hit — primary not called again.
-	_, src, _ := svc.GetETAForStop(context.Background(), 3)
+	_, src, _ := svc.GetETAForStop(context.Background(), 3) //nolint:errcheck
 	if src != "cache" {
 		t.Errorf("second call source = %q, want %q", src, "cache")
 	}
@@ -301,14 +301,14 @@ func TestETAService_Fallback_ResultCached(t *testing.T) {
 	fallback := &mockETAProvider{seconds: 180, source: "simple"}
 	svc := NewETAServiceWithFallback(primary, fallback, store)
 
-	_, _, _ = svc.GetETAForStop(context.Background(), 14)
+	_, _, _ = svc.GetETAForStop(context.Background(), 14) //nolint:errcheck
 
 	// Cache must have been written with the fallback value.
 	if store.setCalls != 1 {
 		t.Errorf("SetCachedETA calls = %d, want 1", store.setCalls)
 	}
 	// Second call must be served from cache.
-	_, src, _ := svc.GetETAForStop(context.Background(), 14)
+	_, src, _ := svc.GetETAForStop(context.Background(), 14) //nolint:errcheck
 	if src != "cache" {
 		t.Errorf("second call source = %q, want %q", src, "cache")
 	}
@@ -357,8 +357,8 @@ func TestSimpleETAProvider_PeakSlowerThanOffPeak(t *testing.T) {
 	pPeak := NewSimpleETAProvider(withClock(func() time.Time { return peak }))
 	pOff := NewSimpleETAProvider(withClock(func() time.Time { return offPeak }))
 
-	secsPeak, _, _ := pPeak.GetETA(context.Background(), 1)
-	secsOff, _, _ := pOff.GetETA(context.Background(), 1)
+	secsPeak, _, _ := pPeak.GetETA(context.Background(), 1) //nolint:errcheck
+	secsOff, _, _ := pOff.GetETA(context.Background(), 1)   //nolint:errcheck
 
 	if secsPeak <= secsOff {
 		t.Errorf("peak ETA (%d) should be > off-peak ETA (%d)", secsPeak, secsOff)
@@ -370,8 +370,8 @@ func TestSimpleETAProvider_DifferentStopsDifferentETAs(t *testing.T) {
 	fakeNow := time.Date(2026, 1, 1, 12, 0, 0, 0, time.Local)
 	p := NewSimpleETAProvider(withClock(func() time.Time { return fakeNow }))
 
-	s1, _, _ := p.GetETA(context.Background(), 1)
-	s2, _, _ := p.GetETA(context.Background(), 2)
+	s1, _, _ := p.GetETA(context.Background(), 1) //nolint:errcheck
+	s2, _, _ := p.GetETA(context.Background(), 2) //nolint:errcheck
 
 	if s1 == s2 {
 		t.Errorf("expected different ETAs for stopID=1 (%d) and stopID=2 (%d)", s1, s2)
@@ -384,9 +384,9 @@ func TestSimpleETAProvider_OffsetWrapsAt60(t *testing.T) {
 	fakeNow := time.Date(2026, 1, 1, 12, 0, 0, 0, time.Local)
 	p := NewSimpleETAProvider(withClock(func() time.Time { return fakeNow }))
 
-	s0, _, _ := p.GetETA(context.Background(), 60)  // 180 + 0
-	s1, _, _ := p.GetETA(context.Background(), 1)   // 180 + 1
-	s61, _, _ := p.GetETA(context.Background(), 61) // 180 + 1
+	s0, _, _ := p.GetETA(context.Background(), 60)  //nolint:errcheck // 180 + 0
+	s1, _, _ := p.GetETA(context.Background(), 1)   //nolint:errcheck // 180 + 1
+	s61, _, _ := p.GetETA(context.Background(), 61) //nolint:errcheck // 180 + 1
 
 	if s0 != 180 {
 		t.Errorf("stopID=60: secs = %d, want 180", s0)

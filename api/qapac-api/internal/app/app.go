@@ -1,3 +1,4 @@
+// Package app assembles and runs the qapac-api HTTP server.
 package app
 
 import (
@@ -5,14 +6,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/dom1nux/qapac-api/internal/config"
-	"github.com/dom1nux/qapac-api/internal/handler"
-	"github.com/dom1nux/qapac-api/internal/middleware"
-	"github.com/dom1nux/qapac-api/internal/routing"
-	"github.com/dom1nux/qapac-api/internal/service"
-	"github.com/dom1nux/qapac-api/internal/storage"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/config"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/handler"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/middleware"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/routing"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/service"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -86,6 +88,36 @@ func New(cfg *config.Config) (*App, error) {
 	etaStore := service.NewPgETACacheStore(pool)
 	etaService := service.NewETAService(etaProvider, etaStore)
 
+	// Auth dependencies.
+	usersRepo := storage.NewUsersRepository(pool)
+	tokensRepo := storage.NewRefreshTokensRepository(pool)
+	authService := service.NewAuthService(
+		usersRepo, tokensRepo,
+		cfg.JWTSecret,
+		cfg.AccessTokenTTL,
+		cfg.RefreshTokenTTL,
+	)
+
+	// Admin dependencies.
+	vehiclesRepo := storage.NewVehiclesRepository(pool)
+	alertsRepo := storage.NewAlertsRepository(pool)
+
+	// Public dependencies.
+	publicRoutesRepo := storage.NewPublicRoutesRepository(pool)
+	positionsRepo := storage.NewVehiclePositionsRepository(pool)
+	ratingsRepo := storage.NewRatingsRepository(pool)
+	favoritesRepo := storage.NewFavoritesRepository(pool)
+
+	// Driver dependencies.
+	driverRepo := storage.NewDriverRepository(pool)
+	tripsRepo := storage.NewTripsRepository(pool)
+
+	// Ensure uploads directory exists.
+	if err := os.MkdirAll(cfg.UploadDir, 0o755); err != nil {
+		return nil, fmt.Errorf("app: create upload dir %q: %w", cfg.UploadDir, err)
+	}
+	log.Printf("upload directory ready: %s", cfg.UploadDir)
+
 	// --- HTTP engine ---
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -99,12 +131,91 @@ func New(cfg *config.Config) (*App, error) {
 
 	// API v1 routes.
 	h := handler.New(stopsRepo, etaService, routingService)
+	ah := handler.NewAuthHandler(authService)
+	adminH := handler.NewAdminHandler(usersRepo, vehiclesRepo, alertsRepo)
+	pubH := handler.NewPublicHandler(publicRoutesRepo, positionsRepo, alertsRepo, ratingsRepo, favoritesRepo)
+	drvH := handler.NewDriverHandler(usersRepo, driverRepo, tripsRepo)
+	uplH := handler.NewUploadHandler(cfg.UploadDir)
 
 	api := router.Group("/api/v1")
 	{
+		// Public endpoints (no auth required).
 		api.GET("/stops/nearby", h.ListStopsNear)
 		api.GET("/stops/:id", h.GetStop)
 		api.GET("/routes/to-stop", h.GetRouteToStop)
+
+		// Routes (public).
+		api.GET("/routes", pubH.ListRoutes)
+		api.GET("/routes/:id", pubH.GetRoute)
+		api.GET("/routes/:id/vehicles", pubH.GetRouteVehicles)
+
+		// Vehicle positions (public).
+		api.GET("/vehicles/nearby", pubH.NearbyVehicles)
+		api.GET("/vehicles/:id/position", pubH.GetVehiclePosition)
+
+		// Alerts (public read).
+		api.GET("/alerts", pubH.ListAlerts)
+		api.GET("/alerts/:id", pubH.GetAlert)
+
+		// Ratings (anonymous).
+		api.POST("/ratings", pubH.CreateRating)
+
+		// Favorites (anonymous, by device_id).
+		api.GET("/favorites", pubH.ListFavorites)
+		api.POST("/favorites", pubH.AddFavorite)
+		api.DELETE("/favorites", pubH.RemoveFavorite)
+
+		// File uploads: serving is public, uploading requires driver/admin auth.
+		api.GET("/uploads/images/:filename", uplH.ServeImage)
+
+		// Auth endpoints (no auth required to call these).
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", ah.Login)
+			auth.POST("/refresh", ah.Refresh)
+			auth.POST("/logout", ah.Logout)
+		}
+
+		// Protected endpoints: driver role.
+		driver := api.Group("/driver")
+		driver.Use(middleware.JWTAuth(authService))
+		driver.Use(middleware.RequireRole("driver", "admin"))
+		{
+			driver.POST("/position", drvH.ReportPosition)
+			driver.GET("/profile", drvH.GetProfile)
+			driver.PUT("/profile", drvH.UpdateProfile)
+			driver.GET("/assignment", drvH.GetAssignment)
+			driver.POST("/trips/start", drvH.StartTrip)
+			driver.POST("/trips/end", drvH.EndTrip)
+			driver.POST("/uploads/images", uplH.UploadImage)
+		}
+
+		// Protected endpoints: admin role.
+		admin := api.Group("/admin")
+		admin.Use(middleware.JWTAuth(authService))
+		admin.Use(middleware.RequireRole("admin"))
+		{
+			// User management.
+			admin.POST("/users", adminH.CreateUser)
+			admin.GET("/users", adminH.ListUsers)
+			admin.GET("/users/:id", adminH.GetUser)
+			admin.PUT("/users/:id", adminH.UpdateUser)
+			admin.DELETE("/users/:id", adminH.DeactivateUser)
+
+			// Vehicle management.
+			admin.POST("/vehicles", adminH.CreateVehicle)
+			admin.GET("/vehicles", adminH.ListVehicles)
+			admin.GET("/vehicles/:id", adminH.GetVehicle)
+			admin.PUT("/vehicles/:id", adminH.UpdateVehicle)
+			admin.POST("/vehicles/:id/assign", adminH.AssignVehicle)
+
+			// Alert management.
+			admin.POST("/alerts", adminH.CreateAlert)
+			admin.DELETE("/alerts/:id", adminH.DeleteAlert)
+
+			// File uploads.
+			admin.POST("/uploads/images", uplH.UploadImage)
+		}
 	}
 
 	return &App{

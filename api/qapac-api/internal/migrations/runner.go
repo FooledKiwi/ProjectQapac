@@ -81,6 +81,15 @@ func CheckSchema(ctx context.Context, pool *pgxpool.Pool) error {
 		"route_shapes",
 		"stop_eta_cache",
 		"route_to_stop_cache",
+		"users",
+		"refresh_tokens",
+		"vehicles",
+		"vehicle_assignments",
+		"vehicle_positions",
+		"trips",
+		"alerts",
+		"ratings",
+		"favorites",
 	}
 
 	for _, table := range required {
@@ -168,7 +177,7 @@ func applyEntry(ctx context.Context, pool *pgxpool.Pool, e entry) error {
 		return fmt.Errorf("begin tx: %w", err)
 	}
 
-	defer func() { _ = tx.Rollback(ctx) }()
+	defer func() { _ = tx.Rollback(ctx) }() //nolint:errcheck // rollback after commit is harmless
 
 	if _, err := tx.Exec(ctx, e.sql); err != nil {
 		return fmt.Errorf("exec sql: %w", err)

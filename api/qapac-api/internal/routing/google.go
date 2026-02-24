@@ -125,7 +125,7 @@ func (g *GoogleRouter) callAPI(ctx context.Context, req RoutingRequest) (*Routin
 	if err != nil {
 		return nil, fmt.Errorf("routing: google: http: %w", err)
 	}
-	defer httpResp.Body.Close()
+	defer httpResp.Body.Close() //nolint:errcheck
 
 	respBytes, err := io.ReadAll(httpResp.Body)
 	if err != nil {
@@ -137,7 +137,7 @@ func (g *GoogleRouter) callAPI(ctx context.Context, req RoutingRequest) (*Routin
 	}
 
 	var apiResp routesAPIResponse
-	if err := json.Unmarshal(respBytes, &apiResp); err != nil {
+	if err = json.Unmarshal(respBytes, &apiResp); err != nil {
 		return nil, fmt.Errorf("routing: google: unmarshal response: %w", err)
 	}
 

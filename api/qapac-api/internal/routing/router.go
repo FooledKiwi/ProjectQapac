@@ -1,3 +1,4 @@
+// Package routing provides route calculation with Google Routes API and caching.
 package routing
 
 import "context"

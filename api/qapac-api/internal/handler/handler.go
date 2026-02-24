@@ -1,8 +1,9 @@
+// Package handler implements HTTP request handlers for the qapac-api.
 package handler
 
 import (
-	"github.com/dom1nux/qapac-api/internal/service"
-	"github.com/dom1nux/qapac-api/internal/storage"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/service"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/storage"
 )
 
 // Handler holds the domain dependencies for all HTTP handlers.

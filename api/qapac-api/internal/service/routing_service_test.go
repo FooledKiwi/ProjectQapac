@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dom1nux/qapac-api/internal/routing"
-	"github.com/dom1nux/qapac-api/internal/storage"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/routing"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/storage"
 )
 
 // --- mock StopsRepository ---

@@ -324,7 +324,6 @@ func TestCachedRouter_UsesNoStopID_WhenContextEmpty(t *testing.T) {
 
 // spyCacheStore captures Set calls for inspection.
 type spyCacheStore struct {
-	data  map[string]*RoutingResponse
 	onSet func(originHash string, stopID int32, resp *RoutingResponse)
 }
 
@@ -347,9 +346,7 @@ func timeoutCtx(t *testing.T, seconds int) <-chan struct{} {
 	go func() {
 		timer := time.NewTimer(time.Duration(seconds) * time.Second)
 		defer timer.Stop()
-		select {
-		case <-timer.C:
-		}
+		<-timer.C
 		close(ch)
 	}()
 	return ch
@@ -430,7 +427,7 @@ func TestGoogleRouter_Success_IsFallbackFalse(t *testing.T) {
 	_, router := newFakeGoogleServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(body))
+		_, _ = w.Write([]byte(body)) //nolint:errcheck
 	})
 
 	req := RoutingRequest{OriginLat: -12.046, OriginLon: -77.042, DestinationLat: -12.055, DestinationLon: -77.053}
@@ -482,7 +479,7 @@ func TestGoogleRouter_Fallback_NoRoutes(t *testing.T) {
 	_, router := newFakeGoogleServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"routes":[]}`))
+		_, _ = w.Write([]byte(`{"routes":[]}`)) //nolint:errcheck
 	})
 
 	req := RoutingRequest{OriginLat: -12.046, OriginLon: -77.042, DestinationLat: -12.055, DestinationLon: -77.053}

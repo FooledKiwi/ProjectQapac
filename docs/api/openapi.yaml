@@ -1,0 +1,2270 @@
+openapi: 3.0.3
+info:
+  title: Qapac API - Transporte Publico de Cajamarca
+  description: |
+    API REST para la aplicacion movil de transporte publico en Cajamarca, Peru.
+
+    ## Audiencia
+    Equipo de desarrollo movil (Android) que consume esta API.
+
+    ## Autenticacion
+    - Los endpoints **publicos** no requieren autenticacion (usuarios anonimos).
+    - Los endpoints de **conductor** y **admin** requieren un JWT en el header `Authorization: Bearer <token>`.
+    - Los tokens se obtienen via `POST /api/v1/auth/login`.
+    - El access token tiene un TTL de 15 minutos; el refresh token 7 dias.
+    - Se usa rotacion de refresh tokens: cada refresh emite un nuevo par.
+
+    ## Formato de errores
+    Todos los errores retornan:
+    ```json
+    {"error": "<mensaje>"}
+    ```
+
+    ## Polling de posiciones en tiempo real
+    No hay WebSocket. El cliente movil debe hacer polling periodico a los endpoints
+    de posicion de vehiculos (ej. cada 5-10 segundos).
+  version: 1.0.0
+  contact:
+    name: Equipo Backend Qapac
+servers:
+  - url: http://localhost:8080
+    description: Servidor de desarrollo local
+  - url: https://api.qapac.pe
+    description: Servidor de produccion (futuro)
+
+tags:
+  - name: Health
+    description: Verificacion de estado del servidor
+  - name: Auth
+    description: Autenticacion (login, refresh, logout)
+  - name: Paradas
+    description: Consulta de paradas de bus (publico)
+  - name: Rutas
+    description: Consulta de rutas y navegacion (publico)
+  - name: Vehiculos
+    description: Posiciones y busqueda de vehiculos (publico)
+  - name: Alertas
+    description: Alertas de servicio (lectura publica)
+  - name: Calificaciones
+    description: Calificacion de viajes por usuarios anonimos
+  - name: Favoritos
+    description: Rutas favoritas por dispositivo
+  - name: Subida de archivos
+    description: Carga y descarga de imagenes
+  - name: Conductor
+    description: Endpoints exclusivos para conductores (requiere JWT role driver|admin)
+  - name: Admin
+    description: Endpoints exclusivos para administradores (requiere JWT role admin)
+
+paths:
+  # ===========================================================================
+  # Health
+  # ===========================================================================
+  /health:
+    get:
+      tags: [Health]
+      summary: Verificar estado del servidor
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Servidor activo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  # ===========================================================================
+  # Auth
+  # ===========================================================================
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesion
+      description: |
+        Autentica un usuario (conductor o admin) y retorna un par de tokens.
+        Los usuarios normales de la app movil NO necesitan login.
+      operationId: authLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              username: conductor1
+              password: driver123
+      responses:
+        "200":
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              example:
+                access_token: "eyJhbGciOiJIUzI1NiIs..."
+                refresh_token: "a1b2c3d4e5f6..."
+                user:
+                  id: 2
+                  username: conductor1
+                  full_name: "Carlos Quispe"
+                  role: driver
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Credenciales invalidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "invalid username or password"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Renovar tokens
+      description: |
+        Envia el refresh token actual y recibe un nuevo par (access + refresh).
+        El refresh token anterior queda invalidado (rotacion de tokens).
+      operationId: authRefresh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Tokens renovados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+              example:
+                access_token: "eyJhbGciOiJIUzI1NiIs..."
+                refresh_token: "f6e5d4c3b2a1..."
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Token invalido, expirado o revocado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "invalid or expired refresh token"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Cerrar sesion
+      description: |
+        Revoca el refresh token proporcionado. El access token sigue siendo
+        valido hasta que expire (max 15 min).
+      operationId: authLogout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogoutRequest"
+      responses:
+        "204":
+          description: Sesion cerrada exitosamente (sin cuerpo)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ===========================================================================
+  # Paradas (Stops) - Publico
+  # ===========================================================================
+  /api/v1/stops/nearby:
+    get:
+      tags: [Paradas]
+      summary: Buscar paradas cercanas
+      description: |
+        Retorna las paradas de bus dentro de un radio (metros) del punto dado.
+        No requiere autenticacion.
+      operationId: listStopsNearby
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: Latitud WGS-84 del usuario
+          schema:
+            type: number
+            format: double
+            example: -7.1637
+        - name: lon
+          in: query
+          required: true
+          description: Longitud WGS-84 del usuario
+          schema:
+            type: number
+            format: double
+            example: -78.5003
+        - name: radius
+          in: query
+          required: false
+          description: "Radio de busqueda en metros (default: 1000, max: 50000)"
+          schema:
+            type: number
+            format: double
+            default: 1000
+            maximum: 50000
+      responses:
+        "200":
+          description: Lista de paradas cercanas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StopBasic"
+              example:
+                - id: 1
+                  name: "Plaza de Armas"
+                  lat: -7.1637
+                  lon: -78.5003
+                - id: 2
+                  name: "Mercado Central"
+                  lat: -7.1612
+                  lon: -78.5128
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/stops/{id}:
+    get:
+      tags: [Paradas]
+      summary: Obtener detalle de una parada
+      description: |
+        Retorna la informacion de una parada incluyendo el ETA estimado
+        (en segundos) del proximo bus. Si no se puede calcular el ETA,
+        `eta_seconds` sera 0.
+      operationId: getStop
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Detalle de la parada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StopDetail"
+              example:
+                id: 1
+                name: "Plaza de Armas"
+                lat: -7.1637
+                lon: -78.5003
+                eta_seconds: 180
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Parada no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "stop not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ===========================================================================
+  # Rutas - Publico
+  # ===========================================================================
+  /api/v1/routes:
+    get:
+      tags: [Rutas]
+      summary: Listar todas las rutas
+      description: |
+        Retorna todas las rutas de transporte con la cantidad de vehiculos
+        activos en cada una. No requiere autenticacion.
+      operationId: listRoutes
+      responses:
+        "200":
+          description: Lista de rutas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RouteBasic"
+              example:
+                - id: 1
+                  name: "R01 - Centro a Baños del Inca"
+                  active: true
+                  vehicle_count: 3
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/routes/{id}:
+    get:
+      tags: [Rutas]
+      summary: Obtener detalle de una ruta
+      description: |
+        Retorna la ruta con sus paradas ordenadas, vehiculos asignados,
+        y la polyline del recorrido.
+      operationId: getRoute
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Detalle de la ruta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Ruta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "route not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/routes/{id}/vehicles:
+    get:
+      tags: [Rutas]
+      summary: Vehiculos de una ruta con posicion GPS
+      description: |
+        Retorna todos los vehiculos asignados a una ruta, incluyendo su
+        posicion GPS mas reciente (si existe). Ideal para mostrar buses
+        en el mapa en tiempo real.
+      operationId: getRouteVehicles
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Lista de vehiculos con posicion
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RouteVehicleWithPosition"
+              example:
+                - id: 1
+                  plate: "ABC-123"
+                  driver_name: "Carlos Quispe"
+                  collector_name: "Maria Lopez"
+                  status: active
+                  position:
+                    lat: -7.1640
+                    lon: -78.5010
+                    heading: 180.5
+                    speed: 25.3
+                    recorded_at: "2025-01-15T10:30:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/routes/to-stop:
+    get:
+      tags: [Rutas]
+      summary: Calcular ruta peatonal hacia una parada
+      description: |
+        Calcula la ruta peatonal desde la ubicacion del usuario hasta una parada.
+        Usa Google Routes API v2. Si Google no esta disponible, retorna un
+        fallback con distancia en linea recta.
+
+        **Polyline**: Codificada con el algoritmo de Google Encoded Polyline
+        (precision 1e-5). Usar `PolyUtil.decode()` del SDK de Android para decodificar.
+
+        **Cuando `is_fallback: true`**: La polyline estara vacia; solo `distance_m`
+        y `duration_s` son estimaciones en linea recta.
+      operationId: getRouteToStop
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: Latitud WGS-84 del usuario
+          schema:
+            type: number
+            format: double
+            example: -7.1640
+        - name: lon
+          in: query
+          required: true
+          description: Longitud WGS-84 del usuario
+          schema:
+            type: number
+            format: double
+            example: -78.5010
+        - name: stop_id
+          in: query
+          required: true
+          description: ID de la parada destino
+          schema:
+            type: integer
+            format: int32
+            example: 5
+      responses:
+        "200":
+          description: Ruta calculada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteToStopResponse"
+              example:
+                polyline: "~fvnL~{bqM..."
+                distance_m: 450
+                duration_s: 360
+                is_fallback: false
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Parada no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "stop not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ===========================================================================
+  # Vehiculos - Publico
+  # ===========================================================================
+  /api/v1/vehicles/nearby:
+    get:
+      tags: [Vehiculos]
+      summary: Buscar vehiculos cercanos
+      description: |
+        Retorna los vehiculos que tienen posicion GPS registrada dentro del
+        radio especificado. No requiere autenticacion.
+      operationId: nearbyVehicles
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: Latitud WGS-84
+          schema:
+            type: number
+            format: double
+            example: -7.1637
+        - name: lon
+          in: query
+          required: true
+          description: Longitud WGS-84
+          schema:
+            type: number
+            format: double
+            example: -78.5003
+        - name: radius
+          in: query
+          required: false
+          description: "Radio en metros (default: 1000, max: 50000)"
+          schema:
+            type: number
+            format: double
+            default: 1000
+            maximum: 50000
+      responses:
+        "200":
+          description: Lista de vehiculos cercanos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NearbyVehicle"
+              example:
+                - id: 1
+                  plate: "ABC-123"
+                  route_name: "R01 - Centro a Baños del Inca"
+                  lat: -7.1640
+                  lon: -78.5010
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/vehicles/{id}/position:
+    get:
+      tags: [Vehiculos]
+      summary: Obtener posicion GPS de un vehiculo
+      description: |
+        Retorna la ultima posicion GPS registrada de un vehiculo especifico.
+      operationId: getVehiclePosition
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Posicion del vehiculo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehiclePosition"
+              example:
+                lat: -7.1640
+                lon: -78.5010
+                heading: 180.5
+                speed: 25.3
+                recorded_at: "2025-01-15T10:30:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: No hay posicion registrada para este vehiculo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "no position recorded for this vehicle"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ===========================================================================
+  # Alertas - Publico (lectura)
+  # ===========================================================================
+  /api/v1/alerts:
+    get:
+      tags: [Alertas]
+      summary: Listar alertas de servicio
+      description: |
+        Retorna las alertas activas. Opcionalmente se puede filtrar por ruta.
+        No requiere autenticacion.
+      operationId: listAlerts
+      parameters:
+        - name: route_id
+          in: query
+          required: false
+          description: Filtrar alertas por ID de ruta
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Lista de alertas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/alerts/{id}:
+    get:
+      tags: [Alertas]
+      summary: Obtener detalle de una alerta
+      operationId: getAlert
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Detalle de la alerta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Alerta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "alert not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ===========================================================================
+  # Calificaciones - Publico
+  # ===========================================================================
+  /api/v1/ratings:
+    post:
+      tags: [Calificaciones]
+      summary: Calificar un viaje
+      description: |
+        Permite a usuarios anonimos calificar un viaje (1-5 estrellas).
+        Se identifica al usuario por `device_id` (UUID del dispositivo Android).
+        Un dispositivo solo puede calificar un viaje una vez (409 si se repite).
+      operationId: createRating
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRatingRequest"
+            example:
+              trip_id: 1
+              rating: 4
+              device_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "201":
+          description: Calificacion creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rating"
+              example:
+                id: 1
+                trip_id: 1
+                rating: 4
+                device_id: "550e8400-e29b-41d4-a716-446655440000"
+                created_at: "2025-01-15T10:30:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: El dispositivo ya califico este viaje
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "device has already rated this trip"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ===========================================================================
+  # Favoritos - Publico
+  # ===========================================================================
+  /api/v1/favorites:
+    get:
+      tags: [Favoritos]
+      summary: Listar rutas favoritas
+      description: |
+        Retorna las rutas favoritas de un dispositivo. Se identifica al
+        usuario por `device_id` en query parameter.
+      operationId: listFavorites
+      parameters:
+        - name: device_id
+          in: query
+          required: true
+          description: UUID del dispositivo Android
+          schema:
+            type: string
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: Lista de favoritos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Favorite"
+              example:
+                - id: 1
+                  device_id: "550e8400-e29b-41d4-a716-446655440000"
+                  route_id: 1
+                  route_name: "R01 - Centro a Baños del Inca"
+                  created_at: "2025-01-15T08:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    post:
+      tags: [Favoritos]
+      summary: Agregar ruta a favoritos
+      operationId: addFavorite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddFavoriteRequest"
+            example:
+              device_id: "550e8400-e29b-41d4-a716-446655440000"
+              route_id: 1
+      responses:
+        "201":
+          description: Favorito agregado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteCreated"
+              example:
+                id: 1
+                device_id: "550e8400-e29b-41d4-a716-446655440000"
+                route_id: 1
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    delete:
+      tags: [Favoritos]
+      summary: Eliminar ruta de favoritos
+      operationId: removeFavorite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveFavoriteRequest"
+            example:
+              device_id: "550e8400-e29b-41d4-a716-446655440000"
+              route_id: 1
+      responses:
+        "204":
+          description: Favorito eliminado (sin cuerpo)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ===========================================================================
+  # Subida de archivos
+  # ===========================================================================
+  /api/v1/uploads/images/{filename}:
+    get:
+      tags: [Subida de archivos]
+      summary: Descargar una imagen subida
+      description: |
+        Sirve una imagen previamente subida. Retorna el archivo directamente
+        con su Content-Type correspondiente.
+      operationId: serveImage
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          description: Nombre del archivo (UUID generado al subir)
+          schema:
+            type: string
+            example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
+      responses:
+        "200":
+          description: Imagen servida
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Archivo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "file not found"
+
+  # ===========================================================================
+  # Conductor (requiere JWT con role driver o admin)
+  # ===========================================================================
+  /api/v1/driver/position:
+    post:
+      tags: [Conductor]
+      summary: Reportar posicion GPS
+      description: |
+        El conductor envia su posicion GPS actual. Se asocia automaticamente
+        al vehiculo asignado. Si no tiene asignacion activa, retorna 409.
+      operationId: driverReportPosition
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportPositionRequest"
+            example:
+              lat: -7.1640
+              lon: -78.5010
+              heading: 180.5
+              speed: 25.3
+      responses:
+        "200":
+          description: Posicion actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: El conductor no tiene vehiculo asignado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "no active vehicle assignment"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/driver/profile:
+    get:
+      tags: [Conductor]
+      summary: Obtener perfil del conductor
+      operationId: driverGetProfile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Perfil del conductor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverProfile"
+              example:
+                id: 2
+                username: conductor1
+                full_name: "Carlos Quispe"
+                phone: "976543210"
+                profile_image_path: ""
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    put:
+      tags: [Conductor]
+      summary: Actualizar perfil del conductor
+      description: |
+        Permite al conductor actualizar su nombre y telefono.
+        Solo se actualizan los campos enviados (no vacios).
+      operationId: driverUpdateProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+            example:
+              full_name: "Carlos Quispe Mendoza"
+              phone: "976543210"
+      responses:
+        "200":
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverProfileUpdated"
+              example:
+                id: 2
+                username: conductor1
+                full_name: "Carlos Quispe Mendoza"
+                phone: "976543210"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/driver/assignment:
+    get:
+      tags: [Conductor]
+      summary: Obtener asignacion actual del conductor
+      description: |
+        Retorna el vehiculo y cobrador asignados al conductor autenticado.
+      operationId: driverGetAssignment
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Asignacion activa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverAssignment"
+              example:
+                vehicle:
+                  id: 1
+                  plate: "ABC-123"
+                  route_name: "R01 - Centro a Baños del Inca"
+                collector_name: "Maria Lopez"
+                assigned_at: "2025-01-15T06:00:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: No tiene asignacion activa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "no active assignment"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/driver/trips/start:
+    post:
+      tags: [Conductor]
+      summary: Iniciar un viaje
+      description: |
+        Inicia un nuevo viaje para el conductor autenticado. Requiere
+        tener un vehiculo asignado con ruta. Si ya tiene un viaje activo, retorna 409.
+      operationId: driverStartTrip
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: Viaje iniciado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripStarted"
+              example:
+                trip_id: 1
+                vehicle_id: 1
+                route_id: 1
+                started_at: "2025-01-15T06:30:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Ya tiene un viaje activo o no tiene asignacion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "an active trip already exists"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/driver/trips/end:
+    post:
+      tags: [Conductor]
+      summary: Finalizar el viaje activo
+      description: |
+        Finaliza el viaje activo del conductor autenticado.
+      operationId: driverEndTrip
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Viaje finalizado (sin cuerpo)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: No hay viaje activo para finalizar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "no active trip to end"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/driver/uploads/images:
+    post:
+      tags: [Conductor]
+      summary: Subir imagen (conductor)
+      description: |
+        Sube una imagen desde la app del conductor. Acepta JPEG, PNG o WebP.
+        Tamano maximo: 5 MB. El archivo se envia como `multipart/form-data`
+        con el campo `file`.
+      operationId: driverUploadImage
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: "Imagen (JPEG, PNG o WebP, max 5 MB)"
+              required:
+                - file
+      responses:
+        "201":
+          description: Imagen subida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+              example:
+                filename: "a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
+                url: "http://localhost:8080/api/v1/uploads/images/a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
+        "400":
+          description: Archivo faltante o tipo no soportado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          description: Archivo excede 5 MB
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "file must not exceed 5 MB"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ===========================================================================
+  # Admin (requiere JWT con role admin)
+  # ===========================================================================
+  /api/v1/admin/users:
+    post:
+      tags: [Admin]
+      summary: Crear usuario
+      description: |
+        Crea un nuevo conductor o administrador. Los usuarios de la app movil
+        son anonimos y no necesitan cuenta.
+      operationId: adminCreateUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+            example:
+              username: conductor3
+              password: "miPassword123"
+              full_name: "Juan Perez"
+              phone: "987654321"
+              role: driver
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserBasic"
+              example:
+                id: 4
+                username: conductor3
+                full_name: "Juan Perez"
+                phone: "987654321"
+                role: driver
+                active: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    get:
+      tags: [Admin]
+      summary: Listar usuarios
+      description: |
+        Lista todos los usuarios, con filtros opcionales por rol y estado activo.
+      operationId: adminListUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          required: false
+          description: "Filtrar por rol: driver o admin"
+          schema:
+            type: string
+            enum: [driver, admin]
+        - name: active
+          in: query
+          required: false
+          description: "Filtrar por estado activo (default: true)"
+          schema:
+            type: string
+            enum: ["true", "false"]
+            default: "true"
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserBasic"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/users/{id}:
+    get:
+      tags: [Admin]
+      summary: Obtener detalle de un usuario
+      operationId: adminGetUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Detalle del usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetail"
+              example:
+                id: 2
+                username: conductor1
+                full_name: "Carlos Quispe"
+                phone: "976543210"
+                role: driver
+                profile_image_path: ""
+                active: true
+                created_at: "2025-01-01T00:00:00Z"
+                updated_at: "2025-01-15T10:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "user not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    put:
+      tags: [Admin]
+      summary: Actualizar usuario
+      description: |
+        Actualiza campos de un usuario. Solo se modifican los campos enviados
+        (actualizacion parcial). Para desactivar un usuario, enviar `active: false`.
+      operationId: adminUpdateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+            example:
+              full_name: "Carlos Quispe Mendoza"
+              role: admin
+      responses:
+        "200":
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserBasic"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    delete:
+      tags: [Admin]
+      summary: Desactivar usuario
+      description: |
+        Desactiva un usuario (soft delete). El usuario no podra iniciar sesion
+        pero sus datos se conservan.
+      operationId: adminDeactivateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "204":
+          description: Usuario desactivado (sin cuerpo)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/vehicles:
+    post:
+      tags: [Admin]
+      summary: Registrar vehiculo
+      operationId: adminCreateVehicle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVehicleRequest"
+            example:
+              plate_number: "XYZ-789"
+              route_id: 1
+      responses:
+        "201":
+          description: Vehiculo creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleBasic"
+              example:
+                id: 9
+                plate_number: "XYZ-789"
+                route_id: 1
+                status: inactive
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    get:
+      tags: [Admin]
+      summary: Listar vehiculos
+      operationId: adminListVehicles
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: route_id
+          in: query
+          required: false
+          description: Filtrar por ID de ruta
+          schema:
+            type: integer
+            format: int32
+        - name: status
+          in: query
+          required: false
+          description: "Filtrar por estado: active, inactive, maintenance"
+          schema:
+            type: string
+            enum: [active, inactive, maintenance]
+      responses:
+        "200":
+          description: Lista de vehiculos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VehicleBasic"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/vehicles/{id}:
+    get:
+      tags: [Admin]
+      summary: Obtener detalle de un vehiculo
+      description: |
+        Retorna el vehiculo con su asignacion actual (conductor y cobrador)
+        si existe.
+      operationId: adminGetVehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Detalle del vehiculo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleDetail"
+              example:
+                id: 1
+                plate_number: "ABC-123"
+                route_id: 1
+                status: active
+                created_at: "2025-01-01T00:00:00Z"
+                assignment:
+                  driver_id: 2
+                  collector_id: 3
+                  assigned_at: "2025-01-15T06:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Vehiculo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "vehicle not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    put:
+      tags: [Admin]
+      summary: Actualizar vehiculo
+      description: |
+        Actualiza campos de un vehiculo (parcial). Los estados validos son:
+        `active`, `inactive`, `maintenance`.
+      operationId: adminUpdateVehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVehicleRequest"
+            example:
+              status: active
+              route_id: 2
+      responses:
+        "200":
+          description: Vehiculo actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleBasic"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Vehiculo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/vehicles/{id}/assign:
+    post:
+      tags: [Admin]
+      summary: Asignar conductor a vehiculo
+      description: |
+        Asigna un conductor (y opcionalmente un cobrador) a un vehiculo.
+        Crea un nuevo registro de asignacion.
+      operationId: adminAssignVehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignVehicleRequest"
+            example:
+              driver_id: 2
+              collector_id: 3
+      responses:
+        "201":
+          description: Asignacion creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleAssignment"
+              example:
+                id: 1
+                vehicle_id: 1
+                driver_id: 2
+                collector_id: 3
+                assigned_at: "2025-01-15T06:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Vehiculo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "vehicle not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/alerts:
+    post:
+      tags: [Admin]
+      summary: Crear alerta de servicio
+      operationId: adminCreateAlert
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertRequest"
+            example:
+              title: "Desvio en Av. Independencia"
+              description: "Por obras municipales, la ruta R01 desvia por Jr. Amazonas"
+              route_id: 1
+              vehicle_plate: ""
+              image_path: ""
+      responses:
+        "201":
+          description: Alerta creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/alerts/{id}:
+    delete:
+      tags: [Admin]
+      summary: Eliminar alerta
+      operationId: adminDeleteAlert
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "204":
+          description: Alerta eliminada (sin cuerpo)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/uploads/images:
+    post:
+      tags: [Admin]
+      summary: Subir imagen (admin)
+      description: |
+        Igual que el endpoint del conductor. Acepta JPEG, PNG o WebP, max 5 MB.
+      operationId: adminUploadImage
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        "201":
+          description: Imagen subida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          description: Archivo excede 5 MB
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+# =============================================================================
+# Components
+# =============================================================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT obtenido via POST /api/v1/auth/login.
+        Header: `Authorization: Bearer <access_token>`
+
+  parameters:
+    PathID:
+      name: id
+      in: path
+      required: true
+      description: Identificador numerico del recurso
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+
+  responses:
+    BadRequest:
+      description: Solicitud mal formada o parametros invalidos
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Token JWT faltante, invalido o expirado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "authentication required"
+    InternalError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    # --- Errores ---
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Mensaje descriptivo del error
+
+    # --- Auth ---
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          description: Nombre de usuario
+        password:
+          type: string
+          description: Contrasena
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: "JWT de acceso (expira en 15 min por defecto)"
+        refresh_token:
+          type: string
+          description: "Token de refresco (64 caracteres hex, expira en 7 dias)"
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+            username:
+              type: string
+            full_name:
+              type: string
+            role:
+              type: string
+              enum: [driver, admin]
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token actual
+
+    LogoutRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token a revocar
+
+    TokenPair:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    # --- Paradas ---
+    StopBasic:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        lat:
+          type: number
+          format: double
+        lon:
+          type: number
+          format: double
+
+    StopDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        lat:
+          type: number
+          format: double
+        lon:
+          type: number
+          format: double
+        eta_seconds:
+          type: integer
+          description: "Segundos estimados de llegada del proximo bus (0 si no disponible)"
+
+    # --- Rutas ---
+    RouteBasic:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        active:
+          type: boolean
+        vehicle_count:
+          type: integer
+          description: Cantidad de vehiculos activos en la ruta
+
+    RouteDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        active:
+          type: boolean
+        stops:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int32
+              name:
+                type: string
+              lat:
+                type: number
+                format: double
+              lon:
+                type: number
+                format: double
+              sequence:
+                type: integer
+                description: Orden de la parada en la ruta
+        vehicles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int32
+              plate:
+                type: string
+              driver:
+                type: string
+                nullable: true
+              collector:
+                type: string
+                nullable: true
+              status:
+                type: string
+        shape_polyline:
+          type: string
+          nullable: true
+          description: "Polyline codificada del recorrido de la ruta (Google Encoded Polyline)"
+
+    RouteVehicleWithPosition:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        plate:
+          type: string
+        driver_name:
+          type: string
+          nullable: true
+        collector_name:
+          type: string
+          nullable: true
+        status:
+          type: string
+        position:
+          type: object
+          nullable: true
+          description: "Nulo si el vehiculo no tiene posicion GPS registrada"
+          properties:
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
+            heading:
+              type: number
+              format: double
+              nullable: true
+              description: "Direccion en grados (0-360)"
+            speed:
+              type: number
+              format: double
+              nullable: true
+              description: "Velocidad en km/h"
+            recorded_at:
+              type: string
+              format: date-time
+
+    RouteToStopResponse:
+      type: object
+      properties:
+        polyline:
+          type: string
+          description: "Encoded Polyline (vacia si is_fallback=true)"
+        distance_m:
+          type: number
+          description: Distancia en metros
+        duration_s:
+          type: number
+          description: Duracion estimada en segundos
+        is_fallback:
+          type: boolean
+          description: "true si la ruta fue calculada como linea recta (Google API no disponible)"
+
+    # --- Vehiculos ---
+    NearbyVehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        plate:
+          type: string
+        route_name:
+          type: string
+        lat:
+          type: number
+          format: double
+        lon:
+          type: number
+          format: double
+
+    VehiclePosition:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lon:
+          type: number
+          format: double
+        heading:
+          type: number
+          format: double
+          nullable: true
+        speed:
+          type: number
+          format: double
+          nullable: true
+        recorded_at:
+          type: string
+          format: date-time
+
+    # --- Alertas ---
+    Alert:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        title:
+          type: string
+        description:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+          nullable: true
+        vehicle_plate:
+          type: string
+        image_path:
+          type: string
+        created_by:
+          type: integer
+          format: int32
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    # --- Calificaciones ---
+    CreateRatingRequest:
+      type: object
+      required: [trip_id, rating, device_id]
+      properties:
+        trip_id:
+          type: integer
+          format: int32
+          description: ID del viaje a calificar
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: "Estrellas (1 a 5)"
+        device_id:
+          type: string
+          description: UUID del dispositivo Android
+
+    Rating:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        trip_id:
+          type: integer
+          format: int32
+        rating:
+          type: integer
+        device_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # --- Favoritos ---
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        device_id:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+        route_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    AddFavoriteRequest:
+      type: object
+      required: [device_id, route_id]
+      properties:
+        device_id:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+
+    RemoveFavoriteRequest:
+      type: object
+      required: [device_id, route_id]
+      properties:
+        device_id:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+
+    FavoriteCreated:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        device_id:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+
+    # --- Subida de archivos ---
+    UploadResponse:
+      type: object
+      properties:
+        filename:
+          type: string
+          description: "Nombre generado (UUID + extension)"
+        url:
+          type: string
+          description: URL completa para descargar la imagen
+
+    # --- Conductor ---
+    ReportPositionRequest:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat:
+          type: number
+          format: double
+          description: Latitud WGS-84
+        lon:
+          type: number
+          format: double
+          description: Longitud WGS-84
+        heading:
+          type: number
+          format: double
+          nullable: true
+          description: "Direccion en grados (0-360, opcional)"
+        speed:
+          type: number
+          format: double
+          nullable: true
+          description: "Velocidad en km/h (opcional)"
+
+    DriverProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        username:
+          type: string
+        full_name:
+          type: string
+        phone:
+          type: string
+        profile_image_path:
+          type: string
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          description: "Nuevo nombre completo (opcional, se ignora si vacio)"
+        phone:
+          type: string
+          description: "Nuevo telefono (opcional, se ignora si vacio)"
+
+    DriverProfileUpdated:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        username:
+          type: string
+        full_name:
+          type: string
+        phone:
+          type: string
+
+    DriverAssignment:
+      type: object
+      properties:
+        vehicle:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int32
+            plate:
+              type: string
+            route_name:
+              type: string
+        collector_name:
+          type: string
+          nullable: true
+        assigned_at:
+          type: string
+          format: date-time
+
+    TripStarted:
+      type: object
+      properties:
+        trip_id:
+          type: integer
+          format: int32
+        vehicle_id:
+          type: integer
+          format: int32
+        route_id:
+          type: integer
+          format: int32
+        started_at:
+          type: string
+          format: date-time
+
+    # --- Admin ---
+    CreateUserRequest:
+      type: object
+      required: [username, password, full_name, role]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+          minLength: 6
+        full_name:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [driver, admin]
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [driver, admin]
+        profile_image_path:
+          type: string
+        active:
+          type: boolean
+          nullable: true
+          description: "Enviar false para desactivar, true para reactivar"
+
+    UserBasic:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        username:
+          type: string
+        full_name:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [driver, admin]
+        active:
+          type: boolean
+
+    UserDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        username:
+          type: string
+        full_name:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+        profile_image_path:
+          type: string
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateVehicleRequest:
+      type: object
+      required: [plate_number]
+      properties:
+        plate_number:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+          nullable: true
+          description: "ID de ruta (opcional, se puede asignar despues)"
+
+    UpdateVehicleRequest:
+      type: object
+      properties:
+        plate_number:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+          nullable: true
+        status:
+          type: string
+          enum: [active, inactive, maintenance]
+
+    VehicleBasic:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        plate_number:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+          nullable: true
+        status:
+          type: string
+
+    VehicleDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        plate_number:
+          type: string
+        route_id:
+          type: integer
+          format: int32
+          nullable: true
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        assignment:
+          type: object
+          nullable: true
+          description: "Nulo si el vehiculo no tiene conductor asignado"
+          properties:
+            driver_id:
+              type: integer
+              format: int32
+            collector_id:
+              type: integer
+              format: int32
+              nullable: true
+            assigned_at:
+              type: string
+              format: date-time
+
+    AssignVehicleRequest:
+      type: object
+      required: [driver_id]
+      properties:
+        driver_id:
+          type: integer
+          format: int32
+          description: ID del conductor a asignar
+        collector_id:
+          type: integer
+          format: int32
+          nullable: true
+          description: "ID del cobrador (opcional)"
+
+    VehicleAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        vehicle_id:
+          type: integer
+          format: int32
+        driver_id:
+          type: integer
+          format: int32
+        collector_id:
+          type: integer
+          format: int32
+          nullable: true
+        assigned_at:
+          type: string
+          format: date-time
+
+    CreateAlertRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          description: Titulo de la alerta
+        description:
+          type: string
+          description: Descripcion detallada
+        route_id:
+          type: integer
+          format: int32
+          nullable: true
+          description: Ruta afectada (opcional)
+        vehicle_plate:
+          type: string
+          description: Placa del vehiculo (opcional)
+        image_path:
+          type: string
+          description: "Ruta de imagen subida (usar endpoint de upload primero)"

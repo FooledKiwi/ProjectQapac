@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dom1nux/qapac-api/internal/generated/db"
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/generated/db"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -113,7 +113,7 @@ func (r *pgRoutesRepository) GetRouteShape(ctx context.Context, routeID int32) (
 
 // rowToStop converts a raw query row into a Stop domain object.
 // geom must be a WKT POINT string produced by ST_AsText, e.g. "POINT(lon lat)".
-func rowToStop(id int32, name string, geom interface{}) (Stop, error) {
+func rowToStop(id int32, name string, geom any) (Stop, error) {
 	if geom == nil {
 		return Stop{}, fmt.Errorf("stop id=%d has NULL geometry (data integrity issue)", id)
 	}
