@@ -33,6 +33,16 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class ExploreFragment extends Fragment implements OnMapReadyCallback {
 
@@ -43,6 +53,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private View layoutNoPermission;
     private TextView tvRouteName;
     private TextView tvLabelVehicle;
+    private TextView tvCurrentLocation;
     private ActivityResultLauncher<String[]> requestPermissionLauncher;
 
     public ExploreFragment() {
@@ -78,6 +89,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         layoutNoPermission = view.findViewById(R.id.layoutNoPermission);
         tvRouteName        = view.findViewById(R.id.tvRouteName);
         tvLabelVehicle     = view.findViewById(R.id.tvLabelVehicle);
+        tvCurrentLocation  = view.findViewById(R.id.tvCurrentLocationExplorer);
 
         layoutNoRoute.setVisibility(View.VISIBLE);
         layoutStopInfo.setVisibility(View.GONE);
@@ -121,8 +133,25 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             return true;
         });
 
+        //Todo esto es para probar
         Stop test = new Stop(0, "Parada insana", -7.165005036051442f, -78.49572883907857f);
-        addStopMarker(test);
+        Stop t2 = new Stop(1, "Cruce o y q se", -7.165879291507253f, -78.50892986119936f);
+
+        List<Stop> stops = new ArrayList<>();
+        stops.add(test);
+        stops.add(t2);
+        stops.forEach(this::addStopMarker);
+
+        map.addPolyline(new PolylineOptions()
+                .add(new LatLng(test.getLat(), test.getLon()))
+                .add(new LatLng(t2.getLat(), t2.getLon()))
+                .width(10f)
+                .color(Color.BLUE)
+                .clickable(true));
+
+        map.setOnPolylineClickListener(polyline ->
+                Toast.makeText(requireContext(), "click en ruta", Toast.LENGTH_SHORT).show()
+        );
     }
 
     private void setMapGesturesEnabled(boolean enabled) {
@@ -143,6 +172,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
                 if (location != null) {
                     LatLng miUbicacion = new LatLng(location.getLatitude(), location.getLongitude());
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(miUbicacion, 15f));
+                    updateCurrentLocationLabel(location.getLatitude(), location.getLongitude());
                 }
             });
         }
@@ -178,5 +208,25 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
 
         layoutNoRoute.setVisibility(View.GONE);
         layoutStopInfo.setVisibility(View.VISIBLE);
+    }
+
+    private void updateCurrentLocationLabel(double lat, double lon) {
+        if (tvCurrentLocation == null || !isAdded()) return;
+        try {
+            Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
+            List<Address> addresses = geocoder.getFromLocation(lat, lon, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                Address address = addresses.get(0);
+                String city = address.getLocality();
+                if (city == null || city.isEmpty()) city = address.getSubAdminArea();
+                if (city == null || city.isEmpty()) city = address.getAdminArea();
+                if (city != null && !city.isEmpty()) {
+                    String finalCity = city;
+                    requireActivity().runOnUiThread(() -> tvCurrentLocation.setText(finalCity));
+                }
+            }
+        } catch (Exception e) {
+            // Geocoder no disponible o sin red — se deja el texto por defecto "[Ubicación]"
+        }
     }
 }

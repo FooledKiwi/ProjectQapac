@@ -36,9 +36,9 @@
             <TextView
                 android:id="@+id/tvCurrentLocationExplorer"
                 style="@style/headingTwo"
-                android:text="[Ubicación]"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:text="Buscando ubicación..." />
 
         </LinearLayout>
 

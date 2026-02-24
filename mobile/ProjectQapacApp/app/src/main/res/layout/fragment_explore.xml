@@ -42,7 +42,6 @@
         android:layout_width="match_parent"
         android:paddingTop="15dp"
         android:layout_height="wrap_content">
-
         <include layout="@layout/ly_current_location" />
 
     </LinearLayout>
