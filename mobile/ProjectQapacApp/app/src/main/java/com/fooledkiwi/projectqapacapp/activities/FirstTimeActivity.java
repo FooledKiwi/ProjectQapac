@@ -1,7 +1,6 @@
 package com.fooledkiwi.projectqapacapp.activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 
@@ -12,6 +11,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.fooledkiwi.projectqapacapp.R;
+import com.fooledkiwi.projectqapacapp.session.SessionManager;
 
 public class FirstTimeActivity extends AppCompatActivity {
     @Override
@@ -25,9 +25,10 @@ public class FirstTimeActivity extends AppCompatActivity {
             return insets;
         });
 
-        if(!checkIfFirstTime()) {
+        // Si el usuario ya tiene sesión activa, ir directo a MainActivity
+        SessionManager session = new SessionManager(this);
+        if (session.isLoggedIn()) {
             gotoMain();
-            /// Acá va a iniciar sesión automáticamente.
             finish();
         }
     }
@@ -53,10 +54,5 @@ public class FirstTimeActivity extends AppCompatActivity {
     public void gotoMain() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
-    }
-
-    public boolean checkIfFirstTime() {
-        SharedPreferences prefs = getSharedPreferences("QapacPrefs", MODE_PRIVATE);
-        return prefs.getBoolean("first_time", true);
     }
 }

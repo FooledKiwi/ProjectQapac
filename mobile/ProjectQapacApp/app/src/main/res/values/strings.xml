@@ -28,6 +28,9 @@
     <string name="error_password_different">Las contraseñas no coinciden.</string>
     <string name="error_not_valid_phone">El número de celular no es correcto.</string>
     <string name="error_not_type_user">Selecciona un tipo de usuario.</string>
+    <string name="error_invalid_credentials">Usuario o contraseña incorrectos.</string>
+    <string name="error_server">Error en el servidor. Intenta de nuevo.</string>
+    <string name="error_network">Sin conexión. Verifica tu red e intenta de nuevo.</string>
     <string name="txtCurrentAlerts">Alertas Recientes de Ruta</string>
     <string name="txtHistoryRoutes">Viajes Realizados: </string>
     <string name="txtActive">Activo</string>
