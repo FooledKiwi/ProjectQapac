@@ -81,6 +81,15 @@ func CheckSchema(ctx context.Context, pool *pgxpool.Pool) error {
 		"route_shapes",
 		"stop_eta_cache",
 		"route_to_stop_cache",
+		"users",
+		"refresh_tokens",
+		"vehicles",
+		"vehicle_assignments",
+		"vehicle_positions",
+		"trips",
+		"alerts",
+		"ratings",
+		"favorites",
 	}
 
 	for _, table := range required {
