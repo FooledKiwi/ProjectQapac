@@ -23,6 +23,46 @@ import (
 // Response 400: missing or invalid query parameters.
 // Response 404: stop does not exist.
 // Response 500: routing error.
+//
+// # Polyline encoding
+//
+// The "polyline" field contains a string encoded with Google's Encoded Polyline
+// Algorithm Format (https://developers.google.com/maps/documentation/utilities/polylinealgorithm).
+// Each coordinate pair is encoded at 1e-5 precision (5 decimal places).
+// This is the value returned verbatim from the Google Routes API v2
+// `routes.polyline.encodedPolyline` field.
+//
+// When is_fallback is true the route could not be computed (Google API
+// unavailable) and polyline will be an empty string — only distance_m and
+// duration_s (straight-line estimates) are reliable in that case.
+//
+// # Android decoding
+//
+// Add the Maps SDK utility library to your build.gradle.kts:
+//
+//	implementation("com.google.maps.android:android-maps-utils:3.8.2")
+//
+// Then decode the polyline into a list of LatLng points and draw it on a
+// GoogleMap:
+//
+//	import com.google.maps.android.PolyUtil
+//	import com.google.android.gms.maps.model.LatLng
+//	import com.google.android.gms.maps.model.PolylineOptions
+//
+//	val encoded: String = response.polyline   // from the JSON response
+//	if (encoded.isNotEmpty()) {
+//	    val points: List<LatLng> = PolyUtil.decode(encoded)
+//	    googleMap.addPolyline(
+//	        PolylineOptions()
+//	            .addAll(points)
+//	            .width(8f)
+//	            .color(android.graphics.Color.BLUE)
+//	    )
+//	}
+//
+// PolyUtil.decode() returns a List<LatLng> where each element is a WGS-84
+// coordinate pair. The list preserves the route direction (origin → destination)
+// so it can be passed directly to PolylineOptions.addAll().
 func (h *Handler) GetRouteToStop(c *gin.Context) {
 	lat, ok := parseRequiredFloat(c, "lat")
 	if !ok {
