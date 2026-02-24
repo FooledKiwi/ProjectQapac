@@ -7,35 +7,35 @@ linters:
     - staticcheck # Broad static analysis (SA*, S1*, QF* checks)
     - gosimple    # Suggests simplifications
     - ineffassign # Detects ineffectual assignments
-    - gofmt       # Ensures code is gofmt-formatted
     - unused      # Reports unused code (vars, funcs, types, consts)
+  settings:
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment # Not enforced yet — can be enabled later
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    staticcheck:
+      checks:
+        - "all"
+        - "-SA1019" # Allow deprecated API usage for now
+  exclusions:
+    # Don't report issues in generated code (sqlc output)
+    paths:
+      - internal/generated
 
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment # Not enforced yet — can be enabled later
-
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-
-  staticcheck:
-    checks:
-      - "all"
-      - "-SA1019" # Allow deprecated API usage for now
-
-  gofmt:
-    simplify: true
-    rewrite-rules:
-      - pattern: "interface{}"
-        replacement: "any"
+formatters:
+  enable:
+    - gofmt # Ensures code is gofmt-formatted
+  settings:
+    gofmt:
+      simplify: true
+      rewrite-rules:
+        - pattern: "interface{}"
+          replacement: "any"
 
 issues:
-  # Don't report issues in generated code (sqlc output)
-  exclude-dirs:
-    - internal/generated
-
   # Fail on new issues only (do not fail on pre-existing ones in one shot)
   max-issues-per-linter: 0
   max-same-issues: 0
