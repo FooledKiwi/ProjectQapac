@@ -1,6 +1,6 @@
 package com.fooledkiwi.projectqapacapp.models;
 
-public class Travel {
+public class Trip {
 
     private String name;
     private String plate;
@@ -8,7 +8,7 @@ public class Travel {
     private float rating;
     private String driver;
 
-    public Travel(String name, String plate, String duration, float rating, String driver) {
+    public Trip(String name, String plate, String duration, float rating, String driver) {
         this.name = name;
         this.plate = plate;
         this.duration = duration;

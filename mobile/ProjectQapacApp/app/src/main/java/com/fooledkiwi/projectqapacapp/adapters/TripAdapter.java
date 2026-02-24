@@ -10,16 +10,16 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fooledkiwi.projectqapacapp.R;
-import com.fooledkiwi.projectqapacapp.models.Travel;
+import com.fooledkiwi.projectqapacapp.models.Trip;
 
 import java.util.List;
 
-public class TravelAdapter extends RecyclerView.Adapter<TravelAdapter.TravelViewHolder> {
+public class TripAdapter extends RecyclerView.Adapter<TripAdapter.TravelViewHolder> {
 
-    private final List<Travel> travels;
+    private final List<Trip> trips;
 
-    public TravelAdapter(List<Travel> travels) {
-        this.travels = travels;
+    public TripAdapter(List<Trip> trips) {
+        this.trips = trips;
     }
 
     @NonNull
@@ -32,17 +32,17 @@ public class TravelAdapter extends RecyclerView.Adapter<TravelAdapter.TravelView
 
     @Override
     public void onBindViewHolder(@NonNull TravelViewHolder holder, int position) {
-        Travel travel = travels.get(position);
-        holder.tvRouteName.setText(travel.getName());
-        holder.tvLabelVehicle.setText(travel.getPlate());
-        holder.tvDurationTrip.setText(travel.getDuration());
-        holder.tvDriverName.setText(travel.getDriver());
-        holder.rbRatingBar.setRating(travel.getRating());
+        Trip trip = trips.get(position);
+        holder.tvRouteName.setText(trip.getName());
+        holder.tvLabelVehicle.setText(trip.getPlate());
+        holder.tvDurationTrip.setText(trip.getDuration());
+        holder.tvDriverName.setText(trip.getDriver());
+        holder.rbRatingBar.setRating(trip.getRating());
     }
 
     @Override
     public int getItemCount() {
-        return travels.size();
+        return trips.size();
     }
 
     public static class TravelViewHolder extends RecyclerView.ViewHolder {

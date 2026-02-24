@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fooledkiwi.projectqapacapp.R;
-import com.fooledkiwi.projectqapacapp.adapters.TravelAdapter;
-import com.fooledkiwi.projectqapacapp.models.Travel;
+import com.fooledkiwi.projectqapacapp.adapters.TripAdapter;
+import com.fooledkiwi.projectqapacapp.models.Trip;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +33,13 @@ public class HistoryFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        List<Travel> travels = new ArrayList<>();
-        travels.add(new Travel("RUTA P13", "DCM-1519", "25 min", 4.5f, "Juan Rodríguez"));
-        travels.add(new Travel("RUTA P07", "BCX-3342", "15 min", 3.0f, "Carlos Pérez"));
-        travels.add(new Travel("RUTA P21", "AKL-8871", "40 min", 5.0f, "Miguel Torres"));
+        List<Trip> trips = new ArrayList<>();
+        trips.add(new Trip("RUTA P13", "DCM-1519", "25 min", 4.5f, "Juan Rodríguez"));
+        trips.add(new Trip("RUTA P07", "BCX-3342", "15 min", 3.0f, "Carlos Pérez"));
+        trips.add(new Trip("RUTA P21", "AKL-8871", "40 min", 5.0f, "Miguel Torres"));
 
         RecyclerView rvHistory = view.findViewById(R.id.rvHistory);
         rvHistory.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvHistory.setAdapter(new TravelAdapter(travels));
+        rvHistory.setAdapter(new TripAdapter(trips));
     }
 }
