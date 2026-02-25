@@ -109,8 +109,8 @@ func (r *pgVehiclesRepository) AssignVehicle(ctx context.Context, a *VehicleAssi
 	qtx := r.q.WithTx(tx)
 
 	// Deactivate any existing active assignment for this vehicle.
-	if err := qtx.DeactivateOldAssignment(ctx, a.VehicleID); err != nil {
-		return nil, fmt.Errorf("storage: AssignVehicle: deactivate old: %w", err)
+	if deactErr := qtx.DeactivateOldAssignment(ctx, a.VehicleID); deactErr != nil {
+		return nil, fmt.Errorf("storage: AssignVehicle: deactivate old: %w", deactErr)
 	}
 
 	// Insert new assignment.
@@ -123,8 +123,8 @@ func (r *pgVehiclesRepository) AssignVehicle(ctx context.Context, a *VehicleAssi
 		return nil, fmt.Errorf("storage: AssignVehicle: insert: %w", err)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("storage: AssignVehicle: commit: %w", err)
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		return nil, fmt.Errorf("storage: AssignVehicle: commit: %w", commitErr)
 	}
 
 	a.ID = row.ID
@@ -495,23 +495,23 @@ func (r *pgRoutesAdminRepository) ReplaceRouteStops(ctx context.Context, routeID
 	qtx := r.q.WithTx(tx)
 
 	// Delete existing stop associations.
-	if err := qtx.AdminDeleteRouteStops(ctx, routeID); err != nil {
-		return fmt.Errorf("storage: ReplaceRouteStops: delete: %w", err)
+	if delErr := qtx.AdminDeleteRouteStops(ctx, routeID); delErr != nil {
+		return fmt.Errorf("storage: ReplaceRouteStops: delete: %w", delErr)
 	}
 
 	// Insert new stop associations.
 	for _, s := range stops {
-		if err := qtx.AdminInsertRouteStop(ctx, db.AdminInsertRouteStopParams{
+		if insErr := qtx.AdminInsertRouteStop(ctx, db.AdminInsertRouteStopParams{
 			RouteID:  routeID,
 			StopID:   s.StopID,
 			Sequence: int32(s.Sequence),
-		}); err != nil {
-			return fmt.Errorf("storage: ReplaceRouteStops: insert stop_id=%d: %w", s.StopID, err)
+		}); insErr != nil {
+			return fmt.Errorf("storage: ReplaceRouteStops: insert stop_id=%d: %w", s.StopID, insErr)
 		}
 	}
 
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("storage: ReplaceRouteStops: commit: %w", err)
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		return fmt.Errorf("storage: ReplaceRouteStops: commit: %w", commitErr)
 	}
 	return nil
 }
@@ -570,8 +570,8 @@ func pgtextOrNull(s string) pgtype.Text {
 	return pgtype.Text{String: s, Valid: true}
 }
 
-// toFloat64 converts an interface{} (from PostGIS ST_X/ST_Y) to float64.
-func toFloat64(v interface{}) float64 {
+// toFloat64 converts an any (from PostGIS ST_X/ST_Y) to float64.
+func toFloat64(v any) float64 {
 	if v == nil {
 		return 0
 	}
