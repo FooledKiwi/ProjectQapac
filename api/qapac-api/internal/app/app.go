@@ -101,6 +101,8 @@ func New(cfg *config.Config) (*App, error) {
 	// Admin dependencies.
 	vehiclesRepo := storage.NewVehiclesRepository(pool)
 	alertsRepo := storage.NewAlertsRepository(pool)
+	stopsAdminRepo := storage.NewStopsAdminRepository(pool)
+	routesAdminRepo := storage.NewRoutesAdminRepository(pool)
 
 	// Public dependencies.
 	publicRoutesRepo := storage.NewPublicRoutesRepository(pool)
@@ -132,7 +134,7 @@ func New(cfg *config.Config) (*App, error) {
 	// API v1 routes.
 	h := handler.New(stopsRepo, etaService, routingService)
 	ah := handler.NewAuthHandler(authService)
-	adminH := handler.NewAdminHandler(usersRepo, vehiclesRepo, alertsRepo)
+	adminH := handler.NewAdminHandler(usersRepo, vehiclesRepo, alertsRepo, stopsAdminRepo, routesAdminRepo)
 	pubH := handler.NewPublicHandler(publicRoutesRepo, positionsRepo, alertsRepo, ratingsRepo, favoritesRepo)
 	drvH := handler.NewDriverHandler(usersRepo, driverRepo, tripsRepo)
 	uplH := handler.NewUploadHandler(cfg.UploadDir)
@@ -212,6 +214,22 @@ func New(cfg *config.Config) (*App, error) {
 			// Alert management.
 			admin.POST("/alerts", adminH.CreateAlert)
 			admin.DELETE("/alerts/:id", adminH.DeleteAlert)
+
+			// Stop management.
+			admin.POST("/stops", adminH.CreateStop)
+			admin.GET("/stops", adminH.ListStops)
+			admin.GET("/stops/:id", adminH.GetStop)
+			admin.PUT("/stops/:id", adminH.UpdateStop)
+			admin.DELETE("/stops/:id", adminH.DeactivateStop)
+
+			// Route management.
+			admin.POST("/routes", adminH.CreateRoute)
+			admin.GET("/routes", adminH.ListRoutes)
+			admin.GET("/routes/:id", adminH.GetRoute)
+			admin.PUT("/routes/:id", adminH.UpdateRoute)
+			admin.DELETE("/routes/:id", adminH.DeactivateRoute)
+			admin.PUT("/routes/:id/stops", adminH.ReplaceRouteStops)
+			admin.PUT("/routes/:id/shape", adminH.UpdateRouteShape)
 
 			// File uploads.
 			admin.POST("/uploads/images", uplH.UploadImage)

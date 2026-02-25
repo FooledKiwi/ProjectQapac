@@ -8,6 +8,41 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Alert struct {
+	ID           int32
+	Title        string
+	Description  pgtype.Text
+	RouteID      pgtype.Int4
+	VehiclePlate pgtype.Text
+	ImagePath    pgtype.Text
+	CreatedBy    pgtype.Int4
+	CreatedAt    pgtype.Timestamp
+}
+
+type Favorite struct {
+	ID        int32
+	DeviceID  string
+	RouteID   int32
+	CreatedAt pgtype.Timestamp
+}
+
+type Rating struct {
+	ID        int32
+	TripID    int32
+	Rating    int16
+	DeviceID  string
+	CreatedAt pgtype.Timestamp
+}
+
+type RefreshToken struct {
+	ID        int32
+	TokenHash string
+	UserID    int32
+	ExpiresAt pgtype.Timestamp
+	Revoked   pgtype.Bool
+	CreatedAt pgtype.Timestamp
+}
+
 type Route struct {
 	ID     int32
 	Name   string
@@ -58,4 +93,53 @@ type StopEtaCache struct {
 	EtaSeconds int32
 	CalcTs     pgtype.Timestamp
 	ExpiresAt  pgtype.Timestamp
+}
+
+type Trip struct {
+	ID        int32
+	VehicleID int32
+	RouteID   int32
+	DriverID  int32
+	StartedAt pgtype.Timestamp
+	EndedAt   pgtype.Timestamp
+	Status    pgtype.Text
+}
+
+type User struct {
+	ID               int32
+	Username         string
+	PasswordHash     string
+	FullName         string
+	Phone            pgtype.Text
+	Role             string
+	ProfileImagePath pgtype.Text
+	Active           pgtype.Bool
+	CreatedAt        pgtype.Timestamp
+	UpdatedAt        pgtype.Timestamp
+}
+
+type Vehicle struct {
+	ID          int32
+	PlateNumber string
+	RouteID     pgtype.Int4
+	Status      pgtype.Text
+	CreatedAt   pgtype.Timestamp
+}
+
+type VehicleAssignment struct {
+	ID          int32
+	VehicleID   int32
+	DriverID    int32
+	CollectorID pgtype.Int4
+	AssignedAt  pgtype.Timestamp
+	Active      pgtype.Bool
+}
+
+type VehiclePosition struct {
+	ID         int32
+	VehicleID  int32
+	Geom       interface{}
+	Heading    pgtype.Float8
+	Speed      pgtype.Float8
+	RecordedAt pgtype.Timestamp
 }

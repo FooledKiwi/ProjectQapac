@@ -2,43 +2,49 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/generated/db"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // pgUsersRepository is the pgx-backed implementation of UsersRepository.
 type pgUsersRepository struct {
+	q    *db.Queries
 	pool *pgxpool.Pool
 }
 
 // NewUsersRepository creates a UsersRepository backed by the given connection pool.
 func NewUsersRepository(pool *pgxpool.Pool) UsersRepository {
-	return &pgUsersRepository{pool: pool}
+	return &pgUsersRepository{q: db.New(pool), pool: pool}
 }
 
 func (r *pgUsersRepository) CreateUser(ctx context.Context, u *User) (*User, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	var id int32
-	var createdAt, updatedAt time.Time
-	err := r.pool.QueryRow(ctx,
-		`INSERT INTO users (username, password_hash, full_name, phone, role, profile_image_path, active)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)
-		 RETURNING id, created_at, updated_at`,
-		u.Username, u.PasswordHash, u.FullName, u.Phone, u.Role, u.ProfileImagePath, true,
-	).Scan(&id, &createdAt, &updatedAt)
+	row, err := r.q.CreateUser(ctx, db.CreateUserParams{
+		Username:         u.Username,
+		PasswordHash:     u.PasswordHash,
+		FullName:         u.FullName,
+		Phone:            pgtext(u.Phone),
+		Role:             u.Role,
+		ProfileImagePath: pgtext(u.ProfileImagePath),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("storage: CreateUser: %w", err)
 	}
 
-	u.ID = id
-	u.Active = true
-	u.CreatedAt = createdAt
-	u.UpdatedAt = updatedAt
+	u.ID = row.ID
+	u.Active = row.Active.Bool
+	u.Phone = row.Phone
+	u.ProfileImagePath = row.ProfileImagePath
+	u.CreatedAt = row.CreatedAt.Time
+	u.UpdatedAt = row.UpdatedAt.Time
 	return u, nil
 }
 
@@ -46,86 +52,56 @@ func (r *pgUsersRepository) GetUserByUsername(ctx context.Context, username stri
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	u := &User{}
-	err := r.pool.QueryRow(ctx,
-		`SELECT id, username, password_hash, full_name, COALESCE(phone, ''), role,
-		        COALESCE(profile_image_path, ''), active, created_at, updated_at
-		 FROM users
-		 WHERE username = $1 AND active = true`,
-		username,
-	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.FullName, &u.Phone, &u.Role,
-		&u.ProfileImagePath, &u.Active, &u.CreatedAt, &u.UpdatedAt)
-
-	if err == pgx.ErrNoRows {
+	row, err := r.q.GetUserByUsername(ctx, username)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("storage: GetUserByUsername: %w", err)
 	}
-	return u, nil
+
+	return userRowToUser(row.ID, row.Username, row.PasswordHash, row.FullName,
+		row.Phone, row.Role, row.ProfileImagePath, row.Active, row.CreatedAt, row.UpdatedAt), nil
 }
 
 func (r *pgUsersRepository) GetUserByID(ctx context.Context, id int32) (*User, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	u := &User{}
-	err := r.pool.QueryRow(ctx,
-		`SELECT id, username, password_hash, full_name, COALESCE(phone, ''), role,
-		        COALESCE(profile_image_path, ''), active, created_at, updated_at
-		 FROM users
-		 WHERE id = $1 AND active = true`,
-		id,
-	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.FullName, &u.Phone, &u.Role,
-		&u.ProfileImagePath, &u.Active, &u.CreatedAt, &u.UpdatedAt)
-
-	if err == pgx.ErrNoRows {
+	row, err := r.q.GetUserByID(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("storage: GetUserByID: %w", err)
 	}
-	return u, nil
+
+	return userRowToUser(row.ID, row.Username, row.PasswordHash, row.FullName,
+		row.Phone, row.Role, row.ProfileImagePath, row.Active, row.CreatedAt, row.UpdatedAt), nil
 }
 
 func (r *pgUsersRepository) ListUsers(ctx context.Context, role string, activeOnly bool) ([]User, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	query := `SELECT id, username, password_hash, full_name, COALESCE(phone, ''), role,
-	                  COALESCE(profile_image_path, ''), active, created_at, updated_at
-	           FROM users WHERE 1=1`
-	args := []any{}
-	argIdx := 1
-
+	var roleParam pgtype.Text
 	if role != "" {
-		query += fmt.Sprintf(" AND role = $%d", argIdx)
-		args = append(args, role)
+		roleParam = pgtype.Text{String: role, Valid: true}
 	}
-	if activeOnly {
-		query += " AND active = true"
-	}
-	query += " ORDER BY created_at DESC"
 
-	rows, err := r.pool.Query(ctx, query, args...)
+	rows, err := r.q.ListUsers(ctx, db.ListUsersParams{
+		Role:       roleParam,
+		ActiveOnly: activeOnly,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("storage: ListUsers: %w", err)
 	}
-	defer rows.Close()
 
-	var users []User
-	for rows.Next() {
-		var u User
-		if err := rows.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.FullName, &u.Phone, &u.Role,
-			&u.ProfileImagePath, &u.Active, &u.CreatedAt, &u.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("storage: ListUsers: scan: %w", err)
-		}
-		users = append(users, u)
+	users := make([]User, 0, len(rows))
+	for _, row := range rows {
+		users = append(users, *userRowToUser(row.ID, row.Username, row.PasswordHash, row.FullName,
+			row.Phone, row.Role, row.ProfileImagePath, row.Active, row.CreatedAt, row.UpdatedAt))
 	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("storage: ListUsers: rows: %w", err)
-	}
-
 	return users, nil
 }
 
@@ -133,12 +109,14 @@ func (r *pgUsersRepository) UpdateUser(ctx context.Context, u *User) error {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	_, err := r.pool.Exec(ctx,
-		`UPDATE users
-		 SET full_name = $1, phone = $2, role = $3, profile_image_path = $4, active = $5, updated_at = NOW()
-		 WHERE id = $6`,
-		u.FullName, u.Phone, u.Role, u.ProfileImagePath, u.Active, u.ID,
-	)
+	err := r.q.UpdateUser(ctx, db.UpdateUserParams{
+		FullName:         u.FullName,
+		Phone:            pgtext(u.Phone),
+		Role:             u.Role,
+		ProfileImagePath: pgtext(u.ProfileImagePath),
+		Active:           pgbool(u.Active),
+		ID:               u.ID,
+	})
 	if err != nil {
 		return fmt.Errorf("storage: UpdateUser: %w", err)
 	}
@@ -149,10 +127,7 @@ func (r *pgUsersRepository) DeactivateUser(ctx context.Context, id int32) error 
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	_, err := r.pool.Exec(ctx,
-		`UPDATE users SET active = false, updated_at = NOW() WHERE id = $1`,
-		id,
-	)
+	err := r.q.DeactivateUser(ctx, id)
 	if err != nil {
 		return fmt.Errorf("storage: DeactivateUser: %w", err)
 	}
@@ -161,23 +136,23 @@ func (r *pgUsersRepository) DeactivateUser(ctx context.Context, id int32) error 
 
 // pgRefreshTokensRepository is the pgx-backed implementation of RefreshTokensRepository.
 type pgRefreshTokensRepository struct {
-	pool *pgxpool.Pool
+	q *db.Queries
 }
 
 // NewRefreshTokensRepository creates a RefreshTokensRepository backed by the given pool.
 func NewRefreshTokensRepository(pool *pgxpool.Pool) RefreshTokensRepository {
-	return &pgRefreshTokensRepository{pool: pool}
+	return &pgRefreshTokensRepository{q: db.New(pool)}
 }
 
 func (r *pgRefreshTokensRepository) StoreRefreshToken(ctx context.Context, tokenHash string, userID int32, expiresAt time.Time) error {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	_, err := r.pool.Exec(ctx,
-		`INSERT INTO refresh_tokens (token_hash, user_id, expires_at)
-		 VALUES ($1, $2, $3)`,
-		tokenHash, userID, expiresAt,
-	)
+	err := r.q.StoreRefreshToken(ctx, db.StoreRefreshTokenParams{
+		TokenHash: tokenHash,
+		UserID:    userID,
+		ExpiresAt: pgtype.Timestamp{Time: expiresAt, Valid: true},
+	})
 	if err != nil {
 		return fmt.Errorf("storage: StoreRefreshToken: %w", err)
 	}
@@ -188,31 +163,29 @@ func (r *pgRefreshTokensRepository) GetRefreshToken(ctx context.Context, tokenHa
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	rt := &RefreshToken{}
-	err := r.pool.QueryRow(ctx,
-		`SELECT id, token_hash, user_id, expires_at, revoked, created_at
-		 FROM refresh_tokens
-		 WHERE token_hash = $1`,
-		tokenHash,
-	).Scan(&rt.ID, &rt.TokenHash, &rt.UserID, &rt.ExpiresAt, &rt.Revoked, &rt.CreatedAt)
-
-	if err == pgx.ErrNoRows {
+	row, err := r.q.GetRefreshToken(ctx, tokenHash)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("storage: GetRefreshToken: %w", err)
 	}
-	return rt, nil
+
+	return &RefreshToken{
+		ID:        row.ID,
+		TokenHash: row.TokenHash,
+		UserID:    row.UserID,
+		ExpiresAt: row.ExpiresAt.Time,
+		Revoked:   row.Revoked.Bool,
+		CreatedAt: row.CreatedAt.Time,
+	}, nil
 }
 
 func (r *pgRefreshTokensRepository) RevokeRefreshToken(ctx context.Context, tokenHash string) error {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	_, err := r.pool.Exec(ctx,
-		`UPDATE refresh_tokens SET revoked = true WHERE token_hash = $1`,
-		tokenHash,
-	)
+	err := r.q.RevokeRefreshToken(ctx, tokenHash)
 	if err != nil {
 		return fmt.Errorf("storage: RevokeRefreshToken: %w", err)
 	}
@@ -223,12 +196,46 @@ func (r *pgRefreshTokensRepository) RevokeAllUserTokens(ctx context.Context, use
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	_, err := r.pool.Exec(ctx,
-		`UPDATE refresh_tokens SET revoked = true WHERE user_id = $1 AND revoked = false`,
-		userID,
-	)
+	err := r.q.RevokeAllUserTokens(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("storage: RevokeAllUserTokens: %w", err)
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+// userRowToUser maps a sqlc-generated user row into the domain User struct.
+func userRowToUser(
+	id int32, username, passwordHash, fullName, phone, role, profileImagePath string,
+	active pgtype.Bool, createdAt, updatedAt pgtype.Timestamp,
+) *User {
+	return &User{
+		ID:               id,
+		Username:         username,
+		PasswordHash:     passwordHash,
+		FullName:         fullName,
+		Phone:            phone,
+		Role:             role,
+		ProfileImagePath: profileImagePath,
+		Active:           active.Bool,
+		CreatedAt:        createdAt.Time,
+		UpdatedAt:        updatedAt.Time,
+	}
+}
+
+// pgtext builds a pgtype.Text from a Go string.
+// Empty strings are stored as NULL (Valid=false).
+func pgtext(s string) pgtype.Text {
+	if s == "" {
+		return pgtype.Text{}
+	}
+	return pgtype.Text{String: s, Valid: true}
+}
+
+// pgbool builds a pgtype.Bool from a Go bool.
+func pgbool(b bool) pgtype.Bool {
+	return pgtype.Bool{Bool: b, Valid: true}
 }

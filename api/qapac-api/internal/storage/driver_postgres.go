@@ -2,10 +2,12 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"time"
 
+	"github.com/FooledKiwi/ProjectQapac/api/qapac-api/internal/generated/db"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -14,55 +16,46 @@ import (
 // ---------------------------------------------------------------------------
 
 type pgDriverRepository struct {
-	pool *pgxpool.Pool
+	q *db.Queries
 }
 
 // NewDriverRepository creates a DriverRepository backed by the given pool.
 func NewDriverRepository(pool *pgxpool.Pool) DriverRepository {
-	return &pgDriverRepository{pool: pool}
+	return &pgDriverRepository{q: db.New(pool)}
 }
 
 func (r *pgDriverRepository) GetAssignmentByDriver(ctx context.Context, driverID int32) (*DriverAssignment, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	da := &DriverAssignment{}
-	err := r.pool.QueryRow(ctx, `
-		SELECT va.vehicle_id, v.plate_number,
-		       COALESCE(rt.name, '') AS route_name,
-		       COALESCE(col.full_name, '') AS collector_name,
-		       va.assigned_at
-		FROM vehicle_assignments va
-		JOIN vehicles v ON v.id = va.vehicle_id
-		LEFT JOIN routes rt ON rt.id = v.route_id
-		LEFT JOIN users col ON col.id = va.collector_id
-		WHERE va.driver_id = $1 AND va.active = true`,
-		driverID,
-	).Scan(&da.VehicleID, &da.PlateNumber, &da.RouteName, &da.CollectorName, &da.AssignedAt)
-
-	if err == pgx.ErrNoRows {
+	row, err := r.q.GetAssignmentByDriver(ctx, driverID)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("storage: GetAssignmentByDriver: %w", err)
 	}
-	return da, nil
+
+	return &DriverAssignment{
+		VehicleID:     row.VehicleID,
+		PlateNumber:   row.PlateNumber,
+		RouteName:     row.RouteName,
+		CollectorName: row.CollectorName,
+		AssignedAt:    row.AssignedAt.Time,
+	}, nil
 }
 
 func (r *pgDriverRepository) UpsertPosition(ctx context.Context, vehicleID int32, lat, lon float64, heading, speed *float64) error {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	_, err := r.pool.Exec(ctx, `
-		INSERT INTO vehicle_positions (vehicle_id, geom, heading, speed, recorded_at)
-		VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326), $4, $5, NOW())
-		ON CONFLICT (vehicle_id)
-		DO UPDATE SET
-			geom = ST_SetSRID(ST_MakePoint($2, $3), 4326),
-			heading = $4,
-			speed = $5,
-			recorded_at = NOW()`,
-		vehicleID, lon, lat, heading, speed)
+	err := r.q.UpsertPosition(ctx, db.UpsertPositionParams{
+		VehicleID: vehicleID,
+		Lon:       lon,
+		Lat:       lat,
+		Heading:   pgfloat8ptr(heading),
+		Speed:     pgfloat8ptr(speed),
+	})
 	if err != nil {
 		return fmt.Errorf("storage: UpsertPosition: %w", err)
 	}
@@ -74,33 +67,30 @@ func (r *pgDriverRepository) UpsertPosition(ctx context.Context, vehicleID int32
 // ---------------------------------------------------------------------------
 
 type pgTripsRepository struct {
-	pool *pgxpool.Pool
+	q *db.Queries
 }
 
 // NewTripsRepository creates a TripsRepository backed by the given pool.
 func NewTripsRepository(pool *pgxpool.Pool) TripsRepository {
-	return &pgTripsRepository{pool: pool}
+	return &pgTripsRepository{q: db.New(pool)}
 }
 
 func (r *pgTripsRepository) StartTrip(ctx context.Context, t *Trip) (*Trip, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	var id int32
-	var startedAt time.Time
-	err := r.pool.QueryRow(ctx, `
-		INSERT INTO trips (vehicle_id, route_id, driver_id, status)
-		VALUES ($1, $2, $3, 'active')
-		RETURNING id, started_at`,
-		t.VehicleID, t.RouteID, t.DriverID,
-	).Scan(&id, &startedAt)
+	row, err := r.q.StartTrip(ctx, db.StartTripParams{
+		VehicleID: t.VehicleID,
+		RouteID:   t.RouteID,
+		DriverID:  t.DriverID,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("storage: StartTrip: %w", err)
 	}
 
-	t.ID = id
-	t.StartedAt = startedAt
-	t.Status = "active"
+	t.ID = row.ID
+	t.StartedAt = row.StartedAt.Time
+	t.Status = row.Status.String
 	return t, nil
 }
 
@@ -109,36 +99,30 @@ func (r *pgTripsRepository) StartTripFromAssignment(ctx context.Context, driverI
 	defer cancel()
 
 	// Look up the vehicle's route_id.
-	var routeID *int32
-	err := r.pool.QueryRow(ctx,
-		`SELECT route_id FROM vehicles WHERE id = $1`, vehicleID,
-	).Scan(&routeID)
+	routeIDPg, err := r.q.GetVehicleRouteID(ctx, vehicleID)
 	if err != nil {
 		return nil, fmt.Errorf("storage: StartTripFromAssignment: vehicle lookup: %w", err)
 	}
-	if routeID == nil {
+	if !routeIDPg.Valid {
 		return nil, fmt.Errorf("storage: StartTripFromAssignment: no route assigned")
 	}
 
-	var id int32
-	var startedAt time.Time
-	err = r.pool.QueryRow(ctx, `
-		INSERT INTO trips (vehicle_id, route_id, driver_id, status)
-		VALUES ($1, $2, $3, 'active')
-		RETURNING id, started_at`,
-		vehicleID, *routeID, driverID,
-	).Scan(&id, &startedAt)
+	row, err := r.q.StartTrip(ctx, db.StartTripParams{
+		VehicleID: vehicleID,
+		RouteID:   routeIDPg.Int32,
+		DriverID:  driverID,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("storage: StartTripFromAssignment: insert: %w", err)
 	}
 
 	return &Trip{
-		ID:        id,
+		ID:        row.ID,
 		VehicleID: vehicleID,
-		RouteID:   *routeID,
+		RouteID:   routeIDPg.Int32,
 		DriverID:  driverID,
-		StartedAt: startedAt,
-		Status:    "active",
+		StartedAt: row.StartedAt.Time,
+		Status:    row.Status.String,
 	}, nil
 }
 
@@ -146,21 +130,25 @@ func (r *pgTripsRepository) GetActiveTrip(ctx context.Context, driverID int32) (
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	t := &Trip{}
-	err := r.pool.QueryRow(ctx, `
-		SELECT id, vehicle_id, route_id, driver_id, started_at, ended_at, status
-		FROM trips
-		WHERE driver_id = $1 AND status = 'active'
-		ORDER BY started_at DESC
-		LIMIT 1`,
-		driverID,
-	).Scan(&t.ID, &t.VehicleID, &t.RouteID, &t.DriverID, &t.StartedAt, &t.EndedAt, &t.Status)
-
-	if err == pgx.ErrNoRows {
+	row, err := r.q.GetActiveTrip(ctx, driverID)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("storage: GetActiveTrip: %w", err)
+	}
+
+	t := &Trip{
+		ID:        row.ID,
+		VehicleID: row.VehicleID,
+		RouteID:   row.RouteID,
+		DriverID:  row.DriverID,
+		StartedAt: row.StartedAt.Time,
+		Status:    row.Status.String,
+	}
+	if row.EndedAt.Valid {
+		endedAt := row.EndedAt.Time
+		t.EndedAt = &endedAt
 	}
 	return t, nil
 }
@@ -169,16 +157,24 @@ func (r *pgTripsRepository) EndTrip(ctx context.Context, driverID int32) error {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	tag, err := r.pool.Exec(ctx, `
-		UPDATE trips
-		SET status = 'completed', ended_at = NOW()
-		WHERE driver_id = $1 AND status = 'active'`,
-		driverID)
+	rowsAffected, err := r.q.EndTrip(ctx, driverID)
 	if err != nil {
 		return fmt.Errorf("storage: EndTrip: %w", err)
 	}
-	if tag.RowsAffected() == 0 {
+	if rowsAffected == 0 {
 		return fmt.Errorf("storage: EndTrip: no active trip found")
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+// pgfloat8ptr converts a *float64 to pgtype.Float8 (NULL if nil).
+func pgfloat8ptr(p *float64) pgtype.Float8 {
+	if p == nil {
+		return pgtype.Float8{}
+	}
+	return pgtype.Float8{Float64: *p, Valid: true}
 }
