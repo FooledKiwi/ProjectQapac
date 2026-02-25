@@ -3,16 +3,12 @@ package com.fooledkiwi.projectqapacapp.models;
 import com.google.gson.annotations.SerializedName;
 
 public class DriverPositionRequest {
-
     @SerializedName("lat")
     private double lat;
-
     @SerializedName("lon")
     private double lon;
-
     @SerializedName("heading")
     private Double heading;
-
     @SerializedName("speed")
     private Double speed;
 

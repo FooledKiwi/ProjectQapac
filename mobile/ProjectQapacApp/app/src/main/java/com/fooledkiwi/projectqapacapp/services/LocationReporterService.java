@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,17 +28,14 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LocationReporterService extends Service {
-
     private static final String TAG = "LocationReporter";
     private static final String CHANNEL_ID = "location_reporter";
     private static final int NOTIFICATION_ID = 1001;
     private static final long INTERVAL_MS = 10_000L;
-
     private Handler handler;
     private Runnable reportRunnable;
     private FusedLocationProviderClient fusedLocationClient;
     private SessionManager sessionManager;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -55,7 +53,6 @@ public class LocationReporterService extends Service {
         }
 
         startForeground(NOTIFICATION_ID, buildNotification());
-
         reportRunnable = new Runnable() {
             @Override
             public void run() {
@@ -126,6 +123,7 @@ public class LocationReporterService extends Service {
         if (handler != null && reportRunnable != null) {
             handler.removeCallbacks(reportRunnable);
         }
+        Toast.makeText(this, "Se paró el servicio de reporte de ubicación.", Toast.LENGTH_LONG).show();
         Log.d(TAG, "Servicio detenido");
     }
 

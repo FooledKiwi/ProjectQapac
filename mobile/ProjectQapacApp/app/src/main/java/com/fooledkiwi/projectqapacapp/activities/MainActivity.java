@@ -2,6 +2,7 @@ package com.fooledkiwi.projectqapacapp.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,14 +40,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         if (isDriverSession()) {
+            Toast.makeText(this, "Reportando ubicación...", Toast.LENGTH_LONG).show();
             startForegroundService(new Intent(this, LocationReporterService.class));
         }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        stopService(new Intent(this, LocationReporterService.class));
     }
 
     private boolean isDriverSession() {
