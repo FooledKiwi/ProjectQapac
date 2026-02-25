@@ -1,66 +1,53 @@
 package com.fooledkiwi.projectqapacapp.fragments.main;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.fooledkiwi.projectqapacapp.R;
+import com.fooledkiwi.projectqapacapp.adapters.AlertAdapter;
+import com.fooledkiwi.projectqapacapp.models.Alert;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link AlertsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.Arrays;
+import java.util.List;
+
 public class AlertsFragment extends Fragment {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     public AlertsFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment AlertsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static AlertsFragment newInstance(String param1, String param2) {
-        AlertsFragment fragment = new AlertsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_alerts, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        RecyclerView rvAllAlertas = view.findViewById(R.id.rvAllAlertas);
+        TextView tvCount = view.findViewById(R.id.tvCountCurrentAlerts);
+
+        List<Alert> alerts = Arrays.asList(
+                new Alert("Cambio de Ruta",     "RUTA P13 - Placa: R2DX-145", "Hace 3m"),
+                new Alert("Desvío Temporal",    "RUTA P7  - Placa: A1BC-234", "Hace 15m"),
+                new Alert("Bus Fuera de Línea", "RUTA P2  - Placa: Z9XY-001", "Hace 32m"),
+                new Alert("Retraso Esperado",   "RUTA P5  - Placa: K3LM-789", "Hace 1h"),
+                new Alert("Servicio Reanudado", "RUTA P1  - Placa: B7QR-456", "Hace 2h")
+        );
+
+        AlertAdapter adapter = new AlertAdapter(alerts);
+        rvAllAlertas.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvAllAlertas.setAdapter(adapter);
+
+        tvCount.setText(String.valueOf(alerts.size()));
     }
 }
