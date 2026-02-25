@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Base.Theme.ProjectQapacApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:colorBackground">@color/cream</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="colorSurface">@color/darkModeContent</item>
+        <item name="colorOnSurfaceVariant">@color/darkGray</item>
+        <item name="colorPrimary">@color/yellow</item>
+        <item name="colorSecondary">@color/purple_light</item>
+        <item name="colorOnPrimary">@color/gray</item>
+
+        <item name="android:windowSplashScreenBackground">@color/purple</item>
+        <item name="materialButtonStyle">@style/AppButton1</item>
+        <item name="editTextStyle">@style/EditText1</item>
+    </style>
+</resources>

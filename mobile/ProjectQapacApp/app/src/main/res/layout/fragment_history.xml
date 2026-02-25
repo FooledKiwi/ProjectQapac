@@ -1,112 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="?attr/background"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragments.main.HistoryFragment">
 
-     <LinearLayout
-         android:id="@+id/llAlertsHeader"
-         android:gravity="center"
-         app:layout_constraintTop_toTopOf="parent"
-         app:layout_constraintStart_toStartOf="parent"
-         app:layout_constraintEnd_toEndOf="parent"
-         android:background="@color/yellow"
-         android:orientation="horizontal"
-         android:layout_width="match_parent"
-         android:layout_height="wrap_content">
+    <LinearLayout
+        android:id="@+id/txtHistory"
+        android:layout_width="match_parent"
 
-         <ImageView
-             android:layout_marginStart="5dp"
-             android:src="@drawable/location"
-             android:layout_width="30dp"
-             android:layout_height="match_parent"/>
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
             android:orientation="vertical">
+
             <TextView
                 style="@style/headingOne"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:text="Cajamarca, 06001"
-                android:textColor="?attr/colorSurface"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <TextView
-                style="@style/txtSubtitles"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textAlignment="textStart"
-                android:text="@string/txtSubtitleAlerts"
-                android:textColor="?attr/colorSurface"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </LinearLayout>
-
-         <androidx.appcompat.widget.Toolbar
-             android:layout_height="wrap_content"
-             android:layout_width="match_parent"
-             app:menu="@menu/configuration_menu"/>
-
-     </LinearLayout>
-    <LinearLayout
-        android:gravity="center"
-        android:id="@+id/txtHistory"
-        android:layout_marginTop="3dp"
-
-        app:layout_constraintTop_toBottomOf="@id/llAlertsHeader"
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <LinearLayout
-            android:orientation="vertical"
-
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <TextView
                 android:layout_width="270dp"
                 android:layout_height="wrap_content"
-                style="@style/headingOne"
                 android:text="@string/txtHistoryRoutes" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:textSize="12dp"
-                app:cornerRadius="0dp"
-                app:iconSize="12dp"
-                android:text="May. 15 2023"
-                app:icon="@drawable/icon_calendar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
 
 
         </LinearLayout>
 
         <androidx.cardview.widget.CardView
-            android:gravity="center"
+            style="@style/CardTextstates"
             android:backgroundTint="@color/pink"
-            app:cardCornerRadius="10dp"
-            style="@style/CardTextstates">
+            android:gravity="center"
+            app:cardCornerRadius="10dp">
 
             <TextView
-                android:id="@+id/tvTrips"
-                android:textColor="@color/red"
-                android:textStyle="bold"
-                android:layout_marginHorizontal="10dp"
+                android:id="@+id/tvTripsQuantity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/test_txt_trips_register"/>
+                android:layout_marginHorizontal="10dp"
+                android:text="@string/test_txt_trips_register"
+                android:textColor="@color/red"
+                android:textStyle="bold" />
         </androidx.cardview.widget.CardView>
     </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
-        app:layout_constraintTop_toBottomOf="@+id/txtHistory"
+        android:id="@+id/rvHistory"
         android:layout_width="match_parent"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_height="0dp"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtHistory" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

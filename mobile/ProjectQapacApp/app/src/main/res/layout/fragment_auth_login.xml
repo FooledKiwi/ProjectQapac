@@ -3,15 +3,16 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="?attr/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:context=".fragments.auth.AuthLoginFragment">
         <ImageView
+
             android:id="@+id/imageView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -23,6 +24,8 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
+            android:textColor="@color/black"
+            android:drawableStart="@drawable/icon_email"
             android:id="@+id/editText_loginUser"
             android:layout_width="346dp"
             android:layout_height="57dp"
@@ -36,6 +39,8 @@
             app:layout_constraintTop_toBottomOf="@+id/imageView2" />
 
         <EditText
+            android:textColor="@color/black"
+            android:drawableStart="@drawable/icon_password"
             android:id="@+id/editText_loginPassword"
             android:layout_width="346dp"
             android:layout_height="57dp"
@@ -48,12 +53,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/editText_loginUser" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
+            app:icon="@drawable/icon_login"
+            app:iconTint="@color/black"
             android:id="@+id/btn_loginConfirm"
             style="@style/AppButton2"
+            app:iconGravity="textStart"
             android:layout_width="214dp"
             android:layout_height="64dp"
             android:layout_marginTop="32dp"
+            android:textStyle="bold"
+            android:textSize="18dp"
             android:text="@string/action_sign_in_short"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -61,6 +71,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/editText_loginPassword"
             app:layout_constraintVertical_bias="0.031" />
+
+        <ProgressBar
+            android:id="@+id/pb_loginLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btn_loginConfirm" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

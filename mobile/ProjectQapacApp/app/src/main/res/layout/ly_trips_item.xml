@@ -1,113 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.cardview.widget.CardView
-        app:cardCornerRadius="10dp"
-        android:id="@+id/cvState"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="5dp"
-        android:backgroundTint="@color/color_active"
-        app:layout_constraintTop_toTopOf="parent"
-        style="@style/CardTextstates">
-        <TextView
-            android:textColor="@color/green_dark"
-            android:textStyle="bold"
-            android:layout_marginHorizontal="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/txtNearest"/>
-    </androidx.cardview.widget.CardView>
-
     <com.google.android.material.card.MaterialCardView
-        app:layout_constraintTop_toBottomOf="@id/cvState"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_width="match_parent"
         style="@style/cardViewRoundedStyle"
-        android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="5dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingHorizontal="25dp"
-            android:paddingVertical="15dp"
-            android:orientation="horizontal">
+            android:paddingVertical="15dp">
 
             <ImageView
                 android:id="@+id/ivIconRoute"
                 android:layout_width="55dp"
                 android:layout_height="55dp"
-                android:layout_marginEnd="5dp"
                 android:background="@null"
                 android:contentDescription="@string/bus_context_desc"
-                android:src="@drawable/icon_bus_one" />
+                android:src="@drawable/icon_bus_one"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
             <LinearLayout
+                android:layout_width="190dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:orientation="vertical"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/ivIconRoute"
+                app:layout_constraintTop_toTopOf="parent">
+
                 <TextView
                     android:id="@+id/tvRouteName"
-                    android:layout_marginStart="5dp"
                     style="@style/headingTwo"
-                    android:text="@string/txtRouteName"
                     android:layout_width="150dp"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:text="@string/txtRouteName" />
+
+                <TextView
+                    android:id="@+id/tvRouteDesc"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:text="Ruta descripción" />
+
                 <TextView
                     android:id="@+id/tvLabelVehicle"
-                    android:layout_marginStart="5dp"
-                    android:text="@string/txtVehicleLabel"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
-            </LinearLayout>
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cvColorState"
-                    app:cardCornerRadius="10dp"
-                    android:layout_marginStart="0dp"
-                    android:backgroundTint="@color/color_active"
-                    style="@style/CardTextstates">
-                    <TextView
-                        android:id="@+id/cvTextState"
-                        android:textColor="@color/green_dark"
-                        android:textStyle="bold"
-                        android:layout_marginHorizontal="10dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/txtActive"/>
-                </androidx.cardview.widget.CardView>
-                <LinearLayout
-                    android:layout_marginStart="5dp"
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/tvPrice"
-                        style="@style/txtSubtitles"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:text="S/ 02.00"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/total"
-                        android:textAlignment="textEnd" />
+                    android:layout_height="wrap_content"
+                    android:text="@string/txtVehicleLabel" />
             </LinearLayout>
 
-        </LinearLayout>
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvColorState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/color_active"
+                app:cardCornerRadius="10dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.06999999">
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/cvTextState"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="10dp"
+                    android:text="@string/txtActive"
+                    android:textColor="@color/green_dark"
+                    android:textStyle="bold" />
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvState"
+                style="@style/CardTextstates"
+                android:backgroundTint="@color/color_active"
+                app:cardCornerRadius="10dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0">
+
+                <TextView
+                    android:id="@+id/cvInfoState"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="10dp"
+                    android:text="@string/txtNearest"
+                    android:textColor="@color/green_dark"
+                    android:textStyle="bold" />
+            </androidx.cardview.widget.CardView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

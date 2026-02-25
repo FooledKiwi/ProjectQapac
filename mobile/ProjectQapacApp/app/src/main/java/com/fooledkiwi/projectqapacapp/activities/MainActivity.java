@@ -1,15 +1,11 @@
 package com.fooledkiwi.projectqapacapp.activities;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -17,9 +13,13 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.fooledkiwi.projectqapacapp.adapters.BottomMainMenuAdapter;
 import com.fooledkiwi.projectqapacapp.R;
+import com.fooledkiwi.projectqapacapp.services.LocationReporterService;
+import com.fooledkiwi.projectqapacapp.session.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
+
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,29 +32,24 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        sessionManager = new SessionManager(this);
         loadBottomMenuInteraction();
+    }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissionLauncher.launch(new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            });
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (isDriverSession()) {
+            Toast.makeText(this, "Reportando ubicación...", Toast.LENGTH_LONG).show();
+            startForegroundService(new Intent(this, LocationReporterService.class));
         }
     }
 
-    private final ActivityResultLauncher<String[]> requestPermissionLauncher =
-        registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-            Boolean fineGranted = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
-            Boolean coarseGranted = result.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false);
-
-            if ((fineGranted != null && fineGranted) || (coarseGranted != null && coarseGranted)) {
-                // El usuario aceptó el permiso en la ventana emergente
-                Toast.makeText(this, "Gracias por compartir tu ubicación", Toast.LENGTH_LONG).show();
-            } else {
-                // El usuario denegó el permiso
-                Toast.makeText(this, "Necesitamos tu ubicación para mostrarte el mapa correctamente", Toast.LENGTH_LONG).show();
-            }
-        });
+    private boolean isDriverSession() {
+        if (!sessionManager.isLoggedIn()) return false;
+        String role = sessionManager.getRole();
+        return "driver".equals(role) || "admin".equals(role);
+    }
 
     public void loadBottomMenuInteraction() {
         ViewPager2 viewPager = findViewById(R.id.vp2_mainPager);
@@ -74,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_alerts) {
                 viewPager.setCurrentItem(2, true);
                 return true;
-            } else if (itemId == R.id.nav_calificar) {
+            } else if (itemId == R.id.nav_cuenta) {
                 viewPager.setCurrentItem(3, true);
                 return true;
             }
@@ -97,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                         bottomNav.setSelectedItemId(R.id.nav_alerts);
                         break;
                     case 3:
-                        bottomNav.setSelectedItemId(R.id.nav_calificar);
+                        bottomNav.setSelectedItemId(R.id.nav_cuenta);
                         break;
                 }
             }

@@ -3,42 +3,42 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
-    android:background="?attr/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.auth.FirstTimeActivity">
+    tools:context=".activities.FirstTimeActivity">
 
-    <Button
-        android:id="@+id/btn_register"
-        android:layout_width="189dp"
-        android:layout_height="63dp"
-        android:layout_marginBottom="252dp"
-        android:onClick="registerBtn"
-        android:text="@string/register"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <LinearLayout
+        app:layout_constraintBottom_toBottomOf="@id/btn_login"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:orientation="vertical">
+
+        <com.google.android.material.button.MaterialButton
+            app:iconTint="@color/black"
+            app:icon="@drawable/icon_login"
+            app:iconGravity="textStart"
+            android:id="@+id/btn_guest"
+            style="@style/AppButton2"
+            android:layout_width="250dp"
+            android:layout_height="61dp"
+            android:onClick="enterAsGuest"
+            android:text="@string/enter"
+            />
+
+    </LinearLayout>
 
     <Button
         android:id="@+id/btn_login"
-        style="@style/AppButton2"
-        android:layout_width="185dp"
-        android:layout_height="61dp"
-        android:layout_marginBottom="156dp"
-        android:onClick="loginBtn"
-        android:text="@string/login"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/btn_guest"
         style="@style/Widget.AppCompat.Button.Borderless"
         android:layout_width="244dp"
         android:layout_height="60dp"
         android:layout_marginBottom="64dp"
-        android:onClick="enterAsGuest"
-        android:text="@string/guest"
+        android:onClick="loginBtn"
+        android:text="@string/im_driver"
         android:textColor="?attr/colorOnSurface"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -51,7 +51,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:textSize="50dp"
+        android:textSize="58dp"
         android:fontFamily="@font/satisfy"
         android:text="@string/welcome"
         android:textColor="?attr/colorOnSurface"

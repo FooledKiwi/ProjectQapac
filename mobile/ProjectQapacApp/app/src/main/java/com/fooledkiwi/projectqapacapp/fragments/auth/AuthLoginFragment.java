@@ -1,105 +1,121 @@
 package com.fooledkiwi.projectqapacapp.fragments.auth;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
-import com.fooledkiwi.projectqapacapp.activities.MainActivity;
+import androidx.fragment.app.Fragment;
+
 import com.fooledkiwi.projectqapacapp.R;
+import com.fooledkiwi.projectqapacapp.activities.MainActivity;
+import com.fooledkiwi.projectqapacapp.models.LoginRequest;
+import com.fooledkiwi.projectqapacapp.models.LoginResponse;
+import com.fooledkiwi.projectqapacapp.network.ApiClient;
+import com.fooledkiwi.projectqapacapp.session.SessionManager;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link AuthLoginFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class AuthLoginFragment extends Fragment {
+
     public AuthLoginFragment() {
         // Required empty public constructor
     }
 
-    // TODO: Rename and change types and number of parameters
-    public static AuthLoginFragment newInstance(String param1, String param2) {
-        AuthLoginFragment fragment = new AuthLoginFragment();
-        Bundle args = new Bundle();
-        // args.putString(ARG_PARAM1, param1);
-        // args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        /*
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }*/
+    public static AuthLoginFragment newInstance() {
+        return new AuthLoginFragment();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_auth_login, container, false);
+
         Button loginButton = view.findViewById(R.id.btn_loginConfirm);
-        loginButton.setOnClickListener(v -> {
-            if(CheckLogin()) {
-                Intent gotoMain = new Intent(v.getContext(), MainActivity.class);
-                startActivity(gotoMain);
-            }
-        });
+        loginButton.setOnClickListener(v -> attemptLogin(view));
         return view;
     }
 
-    public boolean CheckLogin() {
-        View vw = requireView();
+    private void attemptLogin(View view) {
+        EditText inputUser = view.findViewById(R.id.editText_loginUser);
+        EditText inputPassword = view.findViewById(R.id.editText_loginPassword);
+        Button loginButton = view.findViewById(R.id.btn_loginConfirm);
+        ProgressBar progressBar = view.findViewById(R.id.pb_loginLoading);
 
-        EditText inputUser = vw.findViewById(R.id.editText_loginUser);
-        EditText inputPassword = vw.findViewById(R.id.editText_loginPassword);
-
-        String username = inputUser.getText().toString();
+        String username = inputUser.getText().toString().trim();
         String password = inputPassword.getText().toString();
 
+        // Validaciones locales
         if (username.isEmpty()) {
             inputUser.setError(getString(R.string.error_empty_user));
             inputUser.requestFocus();
-            return false;
+            return;
         }
 
         if (password.isEmpty()) {
             inputPassword.setError(getString(R.string.error_empty_password));
             inputPassword.requestFocus();
-            return false;
+            return;
         }
 
         if (password.length() < 4) {
             inputPassword.setError(getString(R.string.error_short_password));
             inputPassword.requestFocus();
-            return false;
+            return;
         }
 
+        setLoading(loginButton, progressBar, true);
+        Intent intent = new Intent(requireContext(), MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-        // Ejemplo de lo que deberías llamar aquí (usando tu SqlLitePlates u otro Helper):
-        // boolean loginExitoso = miDatabaseHelper.validarUsuario(username, password);
-        //
-        // if (loginExitoso) {
-        //     Toast.makeText(getContext(), "Bienvenido", Toast.LENGTH_SHORT).show();
-        //     // Navegar a la siguiente pantalla...
-        // } else {
-        //     Toast.makeText(getContext(), "Credenciales incorrectas", Toast.LENGTH_SHORT).show();
-        // }
-        SharedPreferences prefs = requireActivity().getSharedPreferences("QapacPrefs", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("first_time", false);
-        editor.apply();
-        return  true;
+        LoginRequest request = new LoginRequest(username, password);
+        ApiClient.getAuthService().login(request).enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                if (!isAdded()) return;
+                setLoading(loginButton, progressBar, false);
+                if (response.isSuccessful() && response.body() != null) {
+                    LoginResponse body = response.body();
+
+                    // Guardar sesión
+                    SessionManager session = new SessionManager(requireContext());
+                    session.saveSession(body.getAccessToken(), body.getRefreshToken(), body.getUser());
+
+                    // Navegar a MainActivity
+                    Intent intent = new Intent(requireContext(), MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+
+                } else if (response.code() == 401) {
+                    Toast.makeText(requireContext(),
+                            getString(R.string.error_invalid_credentials),
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(requireContext(),
+                            getString(R.string.error_server),
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                if (!isAdded()) return;
+                setLoading(loginButton, progressBar, false);
+                Toast.makeText(requireContext(),
+                        getString(R.string.error_network),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void setLoading(Button button, ProgressBar progressBar, boolean isLoading) {
+        button.setEnabled(!isLoading);
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
     }
 }

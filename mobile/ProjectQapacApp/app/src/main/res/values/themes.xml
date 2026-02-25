@@ -1,13 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.ProjectQapacApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorSurface">@color/black</item>
-        <item name="colorOnSurface">@color/lightGray</item>
-        <item name="backgroundTint">@color/cream</item>
-        <item name="background">@color/cream</item>
-        <item name="backgroundColor">@color/cream</item>
+        <item name="android:colorBackground">@color/cream</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="colorSurface">@color/darkModeContent</item>
+        <item name="colorOnSurfaceVariant">@color/white</item>
+        <item name="colorPrimary">@color/yellow</item>
+        <item name="colorSecondary">@color/purple_light</item>
+        <item name="colorOnPrimary">@color/gray</item>
+        <item name="colorSecondaryVariant">@color/white</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/purple</item>
         <item name="materialButtonStyle">@style/AppButton1</item>
         <item name="editTextStyle">@style/EditText1</item>
+    </style>
+
+    <style name="CardBackgroundTint" parent="Widget.MaterialComponents.CardView">
+        <item name="android:backgroundTint">@color/yellow</item>
+    </style>
+
+    <style name="PrincipalCardBackgroundTint" parent="Widget.MaterialComponents.CardView">
+        <item name="android:backgroundTint">@color/white</item>
     </style>
 
     <style name="ProfilePassenger">
@@ -23,7 +35,7 @@
 
     <style name="TextHourMinutesSeconds">
         <item name="android:textAlignment">textEnd</item>
-        <item name="android:textColor">@color/purple_dark</item>
+        <item name="android:textColor">@color/purple_light</item>
         <item name="android:textStyle">bold</item>
     </style>
 
@@ -33,7 +45,7 @@
     </style>
 
     <style name="AppButton2" parent="Widget.Material3.Button">
-        <item name="backgroundTint">@color/yellow</item>
+        <item name="android:backgroundTint">@color/yellow</item>
         <item name="android:textColor">@color/black</item>
         <item name="background">@drawable/bg_rounded_all</item>
     </style>

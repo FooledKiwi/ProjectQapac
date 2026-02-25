@@ -8,6 +8,7 @@
         <item name="cornerSize">25%</item>
     </style>
 
+
     <style name="headingOne">
         <item name="android:textSize">22sp</item>
         <item name="android:textStyle">bold</item>
@@ -42,7 +43,9 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
-
+    <style name="IconSearch">
+        <item name="android:src">@drawable/icon_search_location</item>
+    </style>
     <style name="ImageDefault">
         <item name="android:scaleType">centerCrop</item>
         <item name="android:width">60dp</item>
@@ -51,10 +54,32 @@
 
     <style name="cardViewRoundedStyle" parent="CardView">
         <item name="cardCornerRadius">25dp</item>
-        <item name="cardBackgroundColor">?attr/colorSurface</item>
+
         <item name="cardElevation">8dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">match_parent</item>
+    </style>
+
+    <style name="cardMediumViewRoundedStyle" parent="CardView">
+        <item name="cardElevation">8dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
+    </style>
+
+    <style name="MediumCorners" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerRadius">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeTopLeft">30dp</item>
+        <item name="cornerSizeTopRight">30dp</item>
+    </style>
+
+    <style name="MediumCornersBottom" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerRadius">0dp</item>
+        <item name="cornerSizeBottomLeft">30dp</item>
+        <item name="cornerSizeBottomRight">30dp</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
     </style>
 
 
