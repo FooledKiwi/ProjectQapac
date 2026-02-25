@@ -13,6 +13,7 @@ import com.fooledkiwi.projectqapacapp.R;
 import com.fooledkiwi.projectqapacapp.models.Stop;
 
 import java.util.List;
+import java.util.Locale;
 
 public class StopAdapter extends RecyclerView.Adapter<StopAdapter.StopViewHolder> {
 
@@ -35,7 +36,15 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.StopViewHolder
         Stop stop = stops.get(position);
         holder.tvRouteName.setText(stop.getName());
         holder.tvLabelVehicle.setText(stop.getLat() + ", " + stop.getLon());
+        holder.tvEtaSeconds.setText(formatEta(stop.getEtaSeconds()));
         holder.btnFavorite.setOnCheckedChangeListener((buttonView, isChecked) -> onFavoriteClick(stop));
+    }
+
+    private String formatEta(int etaSeconds) {
+        if (etaSeconds <= 0) return "--:--";
+        int minutes = etaSeconds / 60;
+        int seconds = etaSeconds % 60;
+        return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
     }
 
     void onFavoriteClick(Stop stop) {
@@ -51,13 +60,15 @@ public class StopAdapter extends RecyclerView.Adapter<StopAdapter.StopViewHolder
 
         TextView tvRouteName;
         TextView tvLabelVehicle;
+        TextView tvEtaSeconds;
         CheckBox btnFavorite;
 
         public StopViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvRouteName = itemView.findViewById(R.id.tvRouteName);
+            tvRouteName    = itemView.findViewById(R.id.tvRouteName);
             tvLabelVehicle = itemView.findViewById(R.id.tvLabelVehicle);
-            btnFavorite = itemView.findViewById(R.id.btnFavorite);
+            tvEtaSeconds   = itemView.findViewById(R.id.tvEtaSeconds);
+            btnFavorite    = itemView.findViewById(R.id.btnFavorite);
         }
     }
 }

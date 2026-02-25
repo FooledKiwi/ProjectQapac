@@ -6,6 +6,7 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface StopsApiService {
@@ -16,4 +17,7 @@ public interface StopsApiService {
             @Query("lon") double lon,
             @Query("radius") double radius
     );
+
+    @GET("api/v1/stops/{id}")
+    Call<Stop> getStopById(@Path("id") long id);
 }

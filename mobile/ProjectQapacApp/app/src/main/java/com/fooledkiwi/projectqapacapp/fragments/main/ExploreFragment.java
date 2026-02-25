@@ -60,6 +60,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private View layoutNoPermission;
     private TextView tvRouteName;
     private TextView tvLabelVehicle;
+    private TextView tvEtaSeconds;
     private TextView tvCurrentLocation;
     private ActivityResultLauncher<String[]> requestPermissionLauncher;
 
@@ -98,6 +99,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         layoutNoPermission = view.findViewById(R.id.layoutNoPermission);
         tvRouteName        = view.findViewById(R.id.tvRouteName);
         tvLabelVehicle     = view.findViewById(R.id.tvLabelVehicle);
+        tvEtaSeconds       = view.findViewById(R.id.tvEtaSeconds);
         tvCurrentLocation  = view.findViewById(R.id.tvCurrentLocationExplorer);
 
         layoutNoRoute.setVisibility(View.VISIBLE);
@@ -255,11 +257,39 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         Stop stop = (Stop) marker.getTag();
         if (stop == null) return;
 
-        tvRouteName.setText(stop.getName());
-        tvLabelVehicle.setText(stop.getLat() + ", " + stop.getLon());
+        ApiClient.getStopsService().getStopById(stop.getId()).enqueue(new Callback<Stop>() {
+            @Override
+            public void onResponse(@NonNull Call<Stop> call, @NonNull Response<Stop> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    Stop detail = response.body();
+                    tvRouteName.setText(detail.getName());
+                    tvLabelVehicle.setText(detail.getLat() + ", " + detail.getLon());
+                    tvEtaSeconds.setText(formatEta(detail.getEtaSeconds()));
+                    layoutNoRoute.setVisibility(View.GONE);
+                    layoutStopInfo.setVisibility(View.VISIBLE);
+                } else {
+                    Toast.makeText(requireContext(),
+                            "Error al obtener detalle: " + response.code(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
 
-        layoutNoRoute.setVisibility(View.GONE);
-        layoutStopInfo.setVisibility(View.VISIBLE);
+            @Override
+            public void onFailure(@NonNull Call<Stop> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(),
+                        "Error de red: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private String formatEta(int etaSeconds) {
+        if (etaSeconds <= 0) return "--:--";
+        int minutes = etaSeconds / 60;
+        int seconds = etaSeconds % 60;
+        return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
     }
 
     private void updateCurrentLocationLabel(double lat, double lon) {
@@ -279,7 +309,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
                 }
             }
         } catch (Exception e) {
-            // Geocoder no disponible o sin red — se deja el texto por defecto "[Ubicación]"
+            // Geocoder no disponible o sin red no hay internet pe
         }
     }
 }
