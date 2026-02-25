@@ -20,7 +20,8 @@ Permite consultar rutas, paradas, posiciones de buses en tiempo real, y gestiona
 5. [Endpoints de Admin](endpoints-admin.md) (requiere JWT admin)
 6. [Errores y Codigos HTTP](errores-y-codigos.md)
 7. [Datos de Prueba](datos-prueba.md)
-8. [Especificacion OpenAPI](openapi.yaml)
+8. [Modelo de Base de Datos](DIAGRAM.md) (diagrama + explicacion de diseno)
+9. [Especificacion OpenAPI](openapi.yaml)
 
 ---
 
