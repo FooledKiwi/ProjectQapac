@@ -92,7 +92,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private SessionManager sessionManager;
     private final Handler vehiclePollingHandler = new Handler(Looper.getMainLooper());
     private Runnable vehiclePollingRunnable;
-    private static final long VEHICLE_POLL_INTERVAL_MS = 60_000L;
+    private static final long VEHICLE_POLL_INTERVAL_MS = 10_000L;
 
     public ExploreFragment() {
         // Required empty public constructor
