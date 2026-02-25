@@ -14,6 +14,8 @@ type AdminHandler struct {
 	usersRepo    storage.UsersRepository
 	vehiclesRepo storage.VehiclesRepository
 	alertsRepo   storage.AlertsRepository
+	stopsRepo    storage.StopsAdminRepository
+	routesRepo   storage.RoutesAdminRepository
 }
 
 // NewAdminHandler creates an AdminHandler with the given repositories.
@@ -21,11 +23,15 @@ func NewAdminHandler(
 	usersRepo storage.UsersRepository,
 	vehiclesRepo storage.VehiclesRepository,
 	alertsRepo storage.AlertsRepository,
+	stopsRepo storage.StopsAdminRepository,
+	routesRepo storage.RoutesAdminRepository,
 ) *AdminHandler {
 	return &AdminHandler{
 		usersRepo:    usersRepo,
 		vehiclesRepo: vehiclesRepo,
 		alertsRepo:   alertsRepo,
+		stopsRepo:    stopsRepo,
+		routesRepo:   routesRepo,
 	}
 }
 
@@ -507,4 +513,415 @@ func parseID(c *gin.Context) (int32, bool) {
 		return 0, false
 	}
 	return int32(v), true
+}
+
+// ---------------------------------------------------------------------------
+// Stop management
+// ---------------------------------------------------------------------------
+
+type createStopRequest struct {
+	Name string  `json:"name" binding:"required"`
+	Lat  float64 `json:"lat" binding:"required"`
+	Lon  float64 `json:"lon" binding:"required"`
+}
+
+// CreateStop handles POST /api/v1/admin/stops
+func (h *AdminHandler) CreateStop(c *gin.Context) {
+	var req createStopRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	stop := &storage.AdminStop{
+		Name: req.Name,
+		Lat:  req.Lat,
+		Lon:  req.Lon,
+	}
+
+	created, err := h.stopsRepo.CreateStop(c.Request.Context(), stop)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create stop"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id":         created.ID,
+		"name":       created.Name,
+		"lat":        created.Lat,
+		"lon":        created.Lon,
+		"active":     created.Active,
+		"created_at": created.CreatedAt,
+	})
+}
+
+// ListStops handles GET /api/v1/admin/stops
+func (h *AdminHandler) ListStops(c *gin.Context) {
+	activeOnly := c.DefaultQuery("active", "true") == "true"
+
+	stops, err := h.stopsRepo.ListStops(c.Request.Context(), activeOnly)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list stops"})
+		return
+	}
+
+	out := make([]gin.H, len(stops))
+	for i, s := range stops {
+		out[i] = gin.H{
+			"id":         s.ID,
+			"name":       s.Name,
+			"lat":        s.Lat,
+			"lon":        s.Lon,
+			"active":     s.Active,
+			"created_at": s.CreatedAt,
+		}
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+// GetStop handles GET /api/v1/admin/stops/:id
+func (h *AdminHandler) GetStop(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	stop, err := h.stopsRepo.GetStopByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query stop"})
+		return
+	}
+	if stop == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "stop not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":         stop.ID,
+		"name":       stop.Name,
+		"lat":        stop.Lat,
+		"lon":        stop.Lon,
+		"active":     stop.Active,
+		"created_at": stop.CreatedAt,
+	})
+}
+
+type updateStopRequest struct {
+	Name   string  `json:"name"`
+	Lat    float64 `json:"lat"`
+	Lon    float64 `json:"lon"`
+	Active *bool   `json:"active"`
+}
+
+// UpdateStop handles PUT /api/v1/admin/stops/:id
+func (h *AdminHandler) UpdateStop(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	existing, err := h.stopsRepo.GetStopByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query stop"})
+		return
+	}
+	if existing == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "stop not found"})
+		return
+	}
+
+	var req updateStopRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Apply partial updates.
+	if req.Name != "" {
+		existing.Name = req.Name
+	}
+	if req.Lat != 0 {
+		existing.Lat = req.Lat
+	}
+	if req.Lon != 0 {
+		existing.Lon = req.Lon
+	}
+	if req.Active != nil {
+		existing.Active = *req.Active
+	}
+
+	if err := h.stopsRepo.UpdateStop(c.Request.Context(), existing); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update stop"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":     existing.ID,
+		"name":   existing.Name,
+		"lat":    existing.Lat,
+		"lon":    existing.Lon,
+		"active": existing.Active,
+	})
+}
+
+// DeactivateStop handles DELETE /api/v1/admin/stops/:id
+func (h *AdminHandler) DeactivateStop(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.stopsRepo.DeactivateStop(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to deactivate stop"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+// ---------------------------------------------------------------------------
+// Route management
+// ---------------------------------------------------------------------------
+
+type createRouteRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+// CreateRoute handles POST /api/v1/admin/routes
+func (h *AdminHandler) CreateRoute(c *gin.Context) {
+	var req createRouteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	route := &storage.AdminRoute{
+		Name: req.Name,
+	}
+
+	created, err := h.routesRepo.CreateRoute(c.Request.Context(), route)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create route"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id":     created.ID,
+		"name":   created.Name,
+		"active": created.Active,
+	})
+}
+
+// ListRoutes handles GET /api/v1/admin/routes
+func (h *AdminHandler) ListRoutes(c *gin.Context) {
+	activeOnly := c.DefaultQuery("active", "true") == "true"
+
+	routes, err := h.routesRepo.ListRoutes(c.Request.Context(), activeOnly)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list routes"})
+		return
+	}
+
+	out := make([]gin.H, len(routes))
+	for i, rt := range routes {
+		out[i] = gin.H{
+			"id":     rt.ID,
+			"name":   rt.Name,
+			"active": rt.Active,
+		}
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+// GetRoute handles GET /api/v1/admin/routes/:id
+func (h *AdminHandler) GetRoute(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	detail, err := h.routesRepo.GetRouteByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query route"})
+		return
+	}
+	if detail == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "route not found"})
+		return
+	}
+
+	stops := make([]gin.H, len(detail.Stops))
+	for i, s := range detail.Stops {
+		stops[i] = gin.H{
+			"stop_id":  s.StopID,
+			"sequence": s.Sequence,
+		}
+	}
+
+	resp := gin.H{
+		"id":     detail.ID,
+		"name":   detail.Name,
+		"active": detail.Active,
+		"stops":  stops,
+	}
+	if detail.ShapeGeomWKT != "" {
+		resp["shape_geom_wkt"] = detail.ShapeGeomWKT
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+type updateRouteRequest struct {
+	Name   string `json:"name"`
+	Active *bool  `json:"active"`
+}
+
+// UpdateRoute handles PUT /api/v1/admin/routes/:id
+func (h *AdminHandler) UpdateRoute(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	existing, err := h.routesRepo.GetRouteByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query route"})
+		return
+	}
+	if existing == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "route not found"})
+		return
+	}
+
+	var req updateRouteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	route := &storage.AdminRoute{
+		ID:     existing.ID,
+		Name:   existing.Name,
+		Active: existing.Active,
+	}
+
+	if req.Name != "" {
+		route.Name = req.Name
+	}
+	if req.Active != nil {
+		route.Active = *req.Active
+	}
+
+	if err := h.routesRepo.UpdateRoute(c.Request.Context(), route); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update route"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":     route.ID,
+		"name":   route.Name,
+		"active": route.Active,
+	})
+}
+
+// DeactivateRoute handles DELETE /api/v1/admin/routes/:id
+func (h *AdminHandler) DeactivateRoute(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.routesRepo.DeactivateRoute(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to deactivate route"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+type replaceRouteStopsRequest struct {
+	Stops []routeStopEntryRequest `json:"stops" binding:"required,dive"`
+}
+
+type routeStopEntryRequest struct {
+	StopID   int32 `json:"stop_id" binding:"required"`
+	Sequence int   `json:"sequence" binding:"required"`
+}
+
+// ReplaceRouteStops handles PUT /api/v1/admin/routes/:id/stops
+func (h *AdminHandler) ReplaceRouteStops(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	// Verify route exists.
+	existing, err := h.routesRepo.GetRouteByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query route"})
+		return
+	}
+	if existing == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "route not found"})
+		return
+	}
+
+	var req replaceRouteStopsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	entries := make([]storage.RouteStopEntry, len(req.Stops))
+	for i, s := range req.Stops {
+		entries[i] = storage.RouteStopEntry{
+			StopID:   s.StopID,
+			Sequence: s.Sequence,
+		}
+	}
+
+	if err := h.routesRepo.ReplaceRouteStops(c.Request.Context(), id, entries); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to replace route stops"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"route_id": id, "stops_count": len(entries)})
+}
+
+type updateRouteShapeRequest struct {
+	GeomWKT string `json:"geom_wkt" binding:"required"`
+}
+
+// UpdateRouteShape handles PUT /api/v1/admin/routes/:id/shape
+func (h *AdminHandler) UpdateRouteShape(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	// Verify route exists.
+	existing, err := h.routesRepo.GetRouteByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query route"})
+		return
+	}
+	if existing == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "route not found"})
+		return
+	}
+
+	var req updateRouteShapeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.routesRepo.UpsertRouteShape(c.Request.Context(), id, req.GeomWKT); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update route shape"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"route_id": id, "shape_updated": true})
 }
