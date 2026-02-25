@@ -19,8 +19,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.fooledkiwi.projectqapacapp.R;
+import com.fooledkiwi.projectqapacapp.adapters.RouteAdapter;
+import com.fooledkiwi.projectqapacapp.models.Route;
+import com.fooledkiwi.projectqapacapp.models.RouteDetail;
 import com.fooledkiwi.projectqapacapp.models.Stop;
 import com.fooledkiwi.projectqapacapp.network.ApiClient;
 import com.fooledkiwi.projectqapacapp.network.StopsApiService;
@@ -35,6 +40,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -44,8 +50,10 @@ import android.location.Geocoder;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -65,6 +73,12 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private ActivityResultLauncher<String[]> requestPermissionLauncher;
 
     private final List<Marker> stopMarkers = new ArrayList<>();
+
+    private RecyclerView rvRoutes;
+    private RouteAdapter routeAdapter;
+    private final List<Route> routeList = new ArrayList<>();
+    private final Map<Integer, RouteDetail> routeDetailCache = new HashMap<>();
+    private Polyline currentRoutePolyline = null;
 
     public ExploreFragment() {
         // Required empty public constructor
@@ -120,6 +134,11 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             })
         );
 
+        rvRoutes = view.findViewById(R.id.rvRoutes);
+        routeAdapter = new RouteAdapter(routeList);
+        rvRoutes.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvRoutes.setAdapter(routeAdapter);
+
         FloatingActionButton fabSearch = view.findViewById(R.id.fabSearch);
         fabSearch.setOnClickListener(v -> fetchNearbyStops());
 
@@ -132,6 +151,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         }
 
         fetchNearbyStops();
+        fetchRoutes();
     }
 
     @Override
@@ -195,6 +215,49 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
                             Toast.LENGTH_SHORT).show();
                 }
             });
+        });
+    }
+
+    private void fetchRoutes() {
+        ApiClient.getRoutesService().getRoutes().enqueue(new Callback<List<Route>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<Route>> call,
+                                   @NonNull Response<List<Route>> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    routeList.clear();
+                    routeList.addAll(response.body());
+                    routeAdapter.notifyDataSetChanged();
+                    // Eagerly cache route details for polyline/stop lookup
+                    for (Route route : routeList) {
+                        prefetchRouteDetail(route.getId());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<Route>> call, @NonNull Throwable t) {
+                // Error de red silencioso: las rutas no son criticas para el flujo principal
+            }
+        });
+    }
+
+    private void prefetchRouteDetail(int routeId) {
+        if (routeDetailCache.containsKey(routeId)) return;
+        ApiClient.getRoutesService().getRouteById(routeId).enqueue(new Callback<RouteDetail>() {
+            @Override
+            public void onResponse(@NonNull Call<RouteDetail> call,
+                                   @NonNull Response<RouteDetail> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    routeDetailCache.put(routeId, response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<RouteDetail> call, @NonNull Throwable t) {
+                // Fallo silencioso: polyline no estara disponible para esta ruta
+            }
         });
     }
 
@@ -268,6 +331,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
                     tvEtaSeconds.setText(formatEta(detail.getEtaSeconds()));
                     layoutNoRoute.setVisibility(View.GONE);
                     layoutStopInfo.setVisibility(View.VISIBLE);
+                    drawRoutePolylineForStop(stop.getId());
                 } else {
                     Toast.makeText(requireContext(),
                             "Error al obtener detalle: " + response.code(),
@@ -283,6 +347,68 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * Finds which cached RouteDetail contains the given stop id, then draws its
+     * shape_polyline (WKT LINESTRING) on the map. Clears any previously drawn route polyline.
+     */
+    private void drawRoutePolylineForStop(long stopId) {
+        if (map == null) return;
+        RouteDetail matched = null;
+        for (RouteDetail detail : routeDetailCache.values()) {
+            if (detail.getStops() == null) continue;
+            for (RouteDetail.RouteStop rs : detail.getStops()) {
+                if (rs.getId() == stopId) {
+                    matched = detail;
+                    break;
+                }
+            }
+            if (matched != null) break;
+        }
+
+        // Clear previous polyline regardless of whether we found a new one
+        if (currentRoutePolyline != null) {
+            currentRoutePolyline.remove();
+            currentRoutePolyline = null;
+        }
+
+        if (matched == null || matched.getShapePolyline() == null) return;
+
+        List<LatLng> points = parseWktLinestring(matched.getShapePolyline());
+        if (points.isEmpty()) return;
+
+        currentRoutePolyline = map.addPolyline(new PolylineOptions()
+                .addAll(points)
+                .width(8f)
+                .color(Color.parseColor("#FF6200EE"))  // purple
+                .geodesic(true));
+    }
+
+    /**
+     * Parses a WKT LINESTRING into a list of LatLng points.
+     * Expected format: "LINESTRING(lon1 lat1, lon2 lat2, ...)"
+     * Note: WKT uses (longitude latitude) order, but LatLng is (lat, lon).
+     */
+    private List<LatLng> parseWktLinestring(String wkt) {
+        List<LatLng> points = new ArrayList<>();
+        try {
+            // Strip prefix "LINESTRING(" and suffix ")"
+            int start = wkt.indexOf('(');
+            int end = wkt.lastIndexOf(')');
+            if (start < 0 || end < 0 || end <= start) return points;
+            String coords = wkt.substring(start + 1, end).trim();
+            for (String pair : coords.split(",")) {
+                String[] parts = pair.trim().split("\\s+");
+                if (parts.length < 2) continue;
+                double lon = Double.parseDouble(parts[0]);
+                double lat = Double.parseDouble(parts[1]);
+                points.add(new LatLng(lat, lon));
+            }
+        } catch (Exception e) {
+            // Malformed WKT: return whatever was parsed so far
+        }
+        return points;
     }
 
     private String formatEta(int etaSeconds) {

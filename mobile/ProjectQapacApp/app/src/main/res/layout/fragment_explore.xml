@@ -76,6 +76,12 @@
             android:layout_height="wrap_content"
             android:visibility="visible" />
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRoutes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false" />
+
         <LinearLayout
             android:id="@+id/layoutStopInfo"
             android:layout_width="match_parent"

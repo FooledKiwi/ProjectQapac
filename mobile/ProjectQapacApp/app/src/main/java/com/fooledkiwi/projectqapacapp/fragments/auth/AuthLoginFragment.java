@@ -39,7 +39,6 @@ public class AuthLoginFragment extends Fragment {
 
         Button loginButton = view.findViewById(R.id.btn_loginConfirm);
         loginButton.setOnClickListener(v -> attemptLogin(view));
-
         return view;
     }
 
@@ -74,8 +73,6 @@ public class AuthLoginFragment extends Fragment {
         setLoading(loginButton, progressBar, true);
         Intent intent = new Intent(requireContext(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-
 
         LoginRequest request = new LoginRequest(username, password);
         ApiClient.getAuthService().login(request).enqueue(new Callback<LoginResponse>() {
@@ -83,7 +80,6 @@ public class AuthLoginFragment extends Fragment {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (!isAdded()) return;
                 setLoading(loginButton, progressBar, false);
-
                 if (response.isSuccessful() && response.body() != null) {
                     LoginResponse body = response.body();
 

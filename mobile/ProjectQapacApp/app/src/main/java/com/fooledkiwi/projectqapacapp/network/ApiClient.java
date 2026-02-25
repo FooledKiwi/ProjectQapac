@@ -34,4 +34,12 @@ public class ApiClient {
     public static StopsApiService getStopsService() {
         return getClient().create(StopsApiService.class);
     }
+
+    public static DriverApiService getDriverService() {
+        return getClient().create(DriverApiService.class);
+    }
+
+    public static RoutesApiService getRoutesService() {
+        return getClient().create(RoutesApiService.class);
+    }
 }

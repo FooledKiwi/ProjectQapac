@@ -1,5 +1,6 @@
 package com.fooledkiwi.projectqapacapp.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -11,9 +12,13 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.fooledkiwi.projectqapacapp.adapters.BottomMainMenuAdapter;
 import com.fooledkiwi.projectqapacapp.R;
+import com.fooledkiwi.projectqapacapp.services.LocationReporterService;
+import com.fooledkiwi.projectqapacapp.session.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
+
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +31,28 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        sessionManager = new SessionManager(this);
         loadBottomMenuInteraction();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (isDriverSession()) {
+            startForegroundService(new Intent(this, LocationReporterService.class));
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stopService(new Intent(this, LocationReporterService.class));
+    }
+
+    private boolean isDriverSession() {
+        if (!sessionManager.isLoggedIn()) return false;
+        String role = sessionManager.getRole();
+        return "driver".equals(role) || "admin".equals(role);
     }
 
     public void loadBottomMenuInteraction() {

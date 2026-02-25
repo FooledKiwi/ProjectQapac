@@ -9,6 +9,8 @@
         style="@style/cardViewRoundedStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="5dp"
+        android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -31,35 +33,32 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <LinearLayout
-                android:id="@+id/linearLayout2"
-                android:layout_width="wrap_content"
+                android:layout_width="190dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:orientation="horizontal"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/ivIconRoute"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tvRouteName"
+                    style="@style/headingTwo"
+                    android:layout_width="150dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:text="@string/txtRouteName" />
 
-                    <TextView
-                        android:id="@+id/tvRouteName"
-                        style="@style/headingTwo"
-                        android:layout_width="150dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:text="@string/txtRouteName" />
+                <TextView
+                    android:id="@+id/tvRouteDesc"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:text="Ruta descripción" />
 
-                    <TextView
-                        android:id="@+id/tvLabelVehicle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:text="@string/txtVehicleLabel" />
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/tvLabelVehicle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/txtVehicleLabel" />
             </LinearLayout>
 
             <androidx.cardview.widget.CardView
@@ -94,6 +93,7 @@
                 app:layout_constraintVertical_bias="1.0">
 
                 <TextView
+                    android:id="@+id/cvInfoState"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="10dp"
