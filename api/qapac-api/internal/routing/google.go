@@ -19,8 +19,9 @@ const (
 	// googleTimeout is the maximum duration for a Google API call.
 	googleTimeout = 5 * time.Second
 
-	// straightLineSpeedMPS is the fallback speed in m/s (~30 km/h, typical urban speed).
-	straightLineSpeedMPS = 30.0 / 3.6
+	// straightLineSpeedMPS is the fallback walking speed in m/s (~5 km/h).
+	// Used when Google API is unavailable to estimate walk time to a stop.
+	straightLineSpeedMPS = 5.0 / 3.6
 
 	// httpMaxIdleConns is the maximum number of idle (keep-alive) connections
 	// kept in the transport pool across all hosts.
@@ -90,8 +91,7 @@ func (g *GoogleRouter) callAPI(ctx context.Context, req RoutingRequest) (*Routin
 				},
 			},
 		},
-		TravelMode:             "DRIVE",
-		RoutingPreference:      "TRAFFIC_AWARE",
+		TravelMode:             "WALK",
 		ComputeAlternateRoutes: false,
 		RouteModifiers: routesAPIRouteModifiers{
 			AvoidTolls:    false,
@@ -223,7 +223,6 @@ type routesAPIRequest struct {
 	Origin                 routesAPIWaypoint       `json:"origin"`
 	Destination            routesAPIWaypoint       `json:"destination"`
 	TravelMode             string                  `json:"travelMode"`
-	RoutingPreference      string                  `json:"routingPreference"`
 	ComputeAlternateRoutes bool                    `json:"computeAlternateRoutes"`
 	RouteModifiers         routesAPIRouteModifiers `json:"routeModifiers"`
 	LanguageCode           string                  `json:"languageCode"`
