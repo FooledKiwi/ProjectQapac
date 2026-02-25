@@ -42,4 +42,8 @@ public class ApiClient {
     public static RoutesApiService getRoutesService() {
         return getClient().create(RoutesApiService.class);
     }
+
+    public static VehiclesApiService getVehiclesService() {
+        return getClient().create(VehiclesApiService.class);
+    }
 }

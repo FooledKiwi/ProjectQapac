@@ -24,11 +24,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fooledkiwi.projectqapacapp.R;
 import com.fooledkiwi.projectqapacapp.adapters.RouteAdapter;
+import com.fooledkiwi.projectqapacapp.models.NearbyVehicle;
 import com.fooledkiwi.projectqapacapp.models.Route;
 import com.fooledkiwi.projectqapacapp.models.RouteDetail;
 import com.fooledkiwi.projectqapacapp.models.Stop;
 import com.fooledkiwi.projectqapacapp.network.ApiClient;
 import com.fooledkiwi.projectqapacapp.network.StopsApiService;
+import com.fooledkiwi.projectqapacapp.session.SessionManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -57,6 +59,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -75,6 +80,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private ActivityResultLauncher<String[]> requestPermissionLauncher;
 
     private final List<Marker> stopMarkers = new ArrayList<>();
+    private final List<Marker> vehicleMarkers = new ArrayList<>();
 
     private RecyclerView rvRoutes;
     private RouteAdapter routeAdapter;
@@ -82,6 +88,11 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private final Map<Integer, RouteDetail> routeDetailCache = new HashMap<>();
     private Polyline currentRoutePolyline = null;
     private BottomSheetBehavior<View> bottomSheetBehavior;
+
+    private SessionManager sessionManager;
+    private final Handler vehiclePollingHandler = new Handler(Looper.getMainLooper());
+    private Runnable vehiclePollingRunnable;
+    private static final long VEHICLE_POLL_INTERVAL_MS = 60_000L;
 
     public ExploreFragment() {
         // Required empty public constructor
@@ -149,7 +160,10 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         });
 
         FloatingActionButton fabSearch = view.findViewById(R.id.fabSearch);
-        fabSearch.setOnClickListener(v -> fetchNearbyStops());
+        fabSearch.setOnClickListener(v -> {
+            fetchNearbyStops();
+            fetchNearbyVehicles();
+        });
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -161,6 +175,9 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
 
         fetchNearbyStops();
         fetchRoutes();
+
+        sessionManager = new SessionManager(requireContext());
+        startVehiclePolling();
     }
 
     @Override
@@ -177,6 +194,95 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             onStopMarkerClick(marker);
             return true;
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (sessionManager != null && !sessionManager.isLoggedIn()) {
+            startVehiclePolling();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopVehiclePolling();
+    }
+
+    private void startVehiclePolling() {
+        // Avoid scheduling duplicates
+        stopVehiclePolling();
+        vehiclePollingRunnable = new Runnable() {
+            @Override
+            public void run() {
+                fetchNearbyVehicles();
+                vehiclePollingHandler.postDelayed(this, VEHICLE_POLL_INTERVAL_MS);
+            }
+        };
+        vehiclePollingHandler.post(vehiclePollingRunnable);
+    }
+
+    private void stopVehiclePolling() {
+        if (vehiclePollingRunnable != null) {
+            vehiclePollingHandler.removeCallbacks(vehiclePollingRunnable);
+            vehiclePollingRunnable = null;
+        }
+    }
+
+    private void fetchNearbyVehicles() {
+        if (!isAdded()) return;
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) return;
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), location -> {
+            if (location == null || !isAdded()) return;
+            double lat = location.getLatitude();
+            double lon = location.getLongitude();
+
+            ApiClient.getVehiclesService()
+                    .getNearbyVehicles(lat, lon, 5000f)
+                    .enqueue(new Callback<List<NearbyVehicle>>() {
+                        @Override
+                        public void onResponse(@NonNull Call<List<NearbyVehicle>> call,
+                                               @NonNull Response<List<NearbyVehicle>> response) {
+                            if (!isAdded()) return;
+                            if (response.isSuccessful() && response.body() != null) {
+                                clearVehicleMarkers();
+                                for (NearbyVehicle vehicle : response.body()) {
+                                    addVehicleMarker(vehicle);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<List<NearbyVehicle>> call,
+                                              @NonNull Throwable t) {
+                            // Fallo silencioso: se reintentara en el proximo ciclo
+                        }
+                    });
+        });
+    }
+
+    private void clearVehicleMarkers() {
+        for (Marker marker : vehicleMarkers) {
+            marker.remove();
+        }
+        vehicleMarkers.clear();
+    }
+
+    private void addVehicleMarker(NearbyVehicle vehicle) {
+        if (map == null) return;
+        LatLng position = new LatLng(vehicle.getLat(), vehicle.getLon());
+        Marker marker = map.addMarker(new MarkerOptions()
+                .position(position)
+                .title(vehicle.getPlate())
+                .snippet(vehicle.getRouteName())
+                .icon(customIcon(requireContext(), R.drawable.icon_bus_blue)));
+        if (marker != null) {
+            // Tag null intencionalmente: el listener de marcadores ignora vehiculos
+            vehicleMarkers.add(marker);
+        }
     }
 
     private void fetchNearbyStops() {
