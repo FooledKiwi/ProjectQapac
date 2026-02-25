@@ -124,7 +124,7 @@ googleMap.addPolyline(
 | `POST` | `/api/v1/driver/trips/end` | Finalizar viaje |
 | `POST` | `/api/v1/driver/uploads/images` | Subir imagen |
 
-### Admin (JWT admin) - 13 endpoints
+### Admin (JWT admin) - 25 endpoints
 
 | Metodo | Ruta | Descripcion |
 |--------|------|-------------|
@@ -133,6 +133,18 @@ googleMap.addPolyline(
 | `GET` | `/api/v1/admin/users/:id` | Detalle de usuario |
 | `PUT` | `/api/v1/admin/users/:id` | Actualizar usuario |
 | `DELETE` | `/api/v1/admin/users/:id` | Desactivar usuario |
+| `POST` | `/api/v1/admin/stops` | Crear parada |
+| `GET` | `/api/v1/admin/stops` | Listar paradas |
+| `GET` | `/api/v1/admin/stops/:id` | Detalle de parada |
+| `PUT` | `/api/v1/admin/stops/:id` | Actualizar parada |
+| `DELETE` | `/api/v1/admin/stops/:id` | Desactivar parada |
+| `POST` | `/api/v1/admin/routes` | Crear ruta |
+| `GET` | `/api/v1/admin/routes` | Listar rutas |
+| `GET` | `/api/v1/admin/routes/:id` | Detalle de ruta |
+| `PUT` | `/api/v1/admin/routes/:id` | Actualizar ruta |
+| `DELETE` | `/api/v1/admin/routes/:id` | Desactivar ruta |
+| `PUT` | `/api/v1/admin/routes/:id/stops` | Reemplazar paradas de ruta |
+| `PUT` | `/api/v1/admin/routes/:id/shape` | Actualizar geometria de ruta |
 | `POST` | `/api/v1/admin/vehicles` | Registrar vehiculo |
 | `GET` | `/api/v1/admin/vehicles` | Listar vehiculos |
 | `GET` | `/api/v1/admin/vehicles/:id` | Detalle de vehiculo |

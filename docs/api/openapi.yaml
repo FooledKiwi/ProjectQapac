@@ -1434,6 +1434,426 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
+  /api/v1/admin/stops:
+    post:
+      tags: [Admin]
+      summary: Crear parada
+      description: Crea una nueva parada de transporte.
+      operationId: adminCreateStop
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStopRequest"
+            example:
+              name: "Plaza de Armas"
+              lat: -7.1637
+              lon: -78.5003
+      responses:
+        "201":
+          description: Parada creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStop"
+              example:
+                id: 1
+                name: "Plaza de Armas"
+                lat: -7.1637
+                lon: -78.5003
+                active: true
+                created_at: "2025-01-15T08:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    get:
+      tags: [Admin]
+      summary: Listar paradas
+      description: Lista paradas con filtro opcional por estado activo.
+      operationId: adminListStops
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: active
+          in: query
+          required: false
+          description: "Filtrar por estado activo (default: true)"
+          schema:
+            type: string
+            enum: ["true", "false"]
+            default: "true"
+      responses:
+        "200":
+          description: Lista de paradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminStop"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/stops/{id}:
+    get:
+      tags: [Admin]
+      summary: Obtener detalle de una parada
+      operationId: adminGetStop
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Detalle de la parada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStop"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Parada no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "stop not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    put:
+      tags: [Admin]
+      summary: Actualizar parada
+      description: |
+        Actualiza campos de una parada (parcial). Solo se modifican los campos
+        enviados. Los campos vacios o con valor cero se ignoran.
+      operationId: adminUpdateStop
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStopRequest"
+            example:
+              name: "Plaza de Armas Actualizada"
+              lat: -7.1638
+      responses:
+        "200":
+          description: Parada actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStopBasic"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Parada no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    delete:
+      tags: [Admin]
+      summary: Desactivar parada
+      description: |
+        Desactiva una parada (soft delete). La parada se conserva en la base
+        de datos pero deja de estar activa.
+      operationId: adminDeactivateStop
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "204":
+          description: Parada desactivada (sin cuerpo)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/routes:
+    post:
+      tags: [Admin]
+      summary: Crear ruta
+      description: Crea una nueva ruta de transporte.
+      operationId: adminCreateRoute
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRouteRequest"
+            example:
+              name: "R06 - Nueva Ruta"
+      responses:
+        "201":
+          description: Ruta creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminRouteBasic"
+              example:
+                id: 6
+                name: "R06 - Nueva Ruta"
+                active: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    get:
+      tags: [Admin]
+      summary: Listar rutas
+      description: Lista rutas con filtro opcional por estado activo.
+      operationId: adminListRoutes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: active
+          in: query
+          required: false
+          description: "Filtrar por estado activo (default: true)"
+          schema:
+            type: string
+            enum: ["true", "false"]
+            default: "true"
+      responses:
+        "200":
+          description: Lista de rutas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminRouteBasic"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/routes/{id}:
+    get:
+      tags: [Admin]
+      summary: Obtener detalle de una ruta
+      description: |
+        Retorna la ruta con sus paradas ordenadas y geometria (si existe).
+      operationId: adminGetRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "200":
+          description: Detalle de la ruta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminRouteDetail"
+              example:
+                id: 1
+                name: "R01 - Centro a Banos del Inca"
+                active: true
+                stops:
+                  - stop_id: 1
+                    sequence: 1
+                  - stop_id: 5
+                    sequence: 2
+                shape_geom_wkt: "LINESTRING(-78.5003 -7.1637, -78.5120 -7.1580)"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Ruta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "route not found"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    put:
+      tags: [Admin]
+      summary: Actualizar ruta
+      description: |
+        Actualiza campos de una ruta (parcial). Los campos vacios se ignoran.
+      operationId: adminUpdateRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRouteRequest"
+            example:
+              name: "R01 - Centro a Banos del Inca (Actualizada)"
+      responses:
+        "200":
+          description: Ruta actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminRouteBasic"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Ruta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    delete:
+      tags: [Admin]
+      summary: Desactivar ruta
+      description: |
+        Desactiva una ruta (soft delete). La ruta se conserva en la base
+        de datos pero deja de estar activa.
+      operationId: adminDeactivateRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      responses:
+        "204":
+          description: Ruta desactivada (sin cuerpo)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/routes/{id}/stops:
+    put:
+      tags: [Admin]
+      summary: Reemplazar paradas de ruta
+      description: |
+        Reemplaza la lista completa de paradas de una ruta en una sola
+        transaccion. Elimina todas las asociaciones existentes e inserta
+        las nuevas.
+      operationId: adminReplaceRouteStops
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceRouteStopsRequest"
+            example:
+              stops:
+                - stop_id: 1
+                  sequence: 1
+                - stop_id: 5
+                  sequence: 2
+                - stop_id: 3
+                  sequence: 3
+      responses:
+        "200":
+          description: Paradas reemplazadas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplaceRouteStopsResponse"
+              example:
+                route_id: 1
+                stops_count: 3
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Ruta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/admin/routes/{id}/shape:
+    put:
+      tags: [Admin]
+      summary: Actualizar geometria de ruta
+      description: |
+        Actualiza o inserta la geometria (polyline) de una ruta. Se espera
+        un WKT LINESTRING con las coordenadas del recorrido.
+      operationId: adminUpdateRouteShape
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PathID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRouteShapeRequest"
+            example:
+              geom_wkt: "LINESTRING(-78.5003 -7.1637, -78.5120 -7.1580, -78.4688 -7.1614)"
+      responses:
+        "200":
+          description: Geometria actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateRouteShapeResponse"
+              example:
+                route_id: 1
+                shape_updated: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Ruta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
   /api/v1/admin/alerts:
     post:
       tags: [Admin]
@@ -2140,6 +2560,181 @@ components:
           type: string
           format: date-time
 
+    # --- Admin: Paradas ---
+    CreateStopRequest:
+      type: object
+      required: [name, lat, lon]
+      properties:
+        name:
+          type: string
+          description: Nombre de la parada
+        lat:
+          type: number
+          format: double
+          description: Latitud WGS-84
+        lon:
+          type: number
+          format: double
+          description: Longitud WGS-84
+
+    UpdateStopRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Nuevo nombre (se ignora si vacio)"
+        lat:
+          type: number
+          format: double
+          description: "Nueva latitud (se ignora si 0)"
+        lon:
+          type: number
+          format: double
+          description: "Nueva longitud (se ignora si 0)"
+        active:
+          type: boolean
+          nullable: true
+          description: "true para activar, false para desactivar"
+
+    AdminStop:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        lat:
+          type: number
+          format: double
+        lon:
+          type: number
+          format: double
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    AdminStopBasic:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        lat:
+          type: number
+          format: double
+        lon:
+          type: number
+          format: double
+        active:
+          type: boolean
+
+    # --- Admin: Rutas ---
+    CreateRouteRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Nombre de la ruta
+
+    UpdateRouteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Nuevo nombre (se ignora si vacio)"
+        active:
+          type: boolean
+          nullable: true
+          description: "true para activar, false para desactivar"
+
+    AdminRouteBasic:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        active:
+          type: boolean
+
+    AdminRouteDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        active:
+          type: boolean
+        stops:
+          type: array
+          description: "Lista ordenada de paradas (puede estar vacia)"
+          items:
+            type: object
+            properties:
+              stop_id:
+                type: integer
+                format: int32
+              sequence:
+                type: integer
+        shape_geom_wkt:
+          type: string
+          nullable: true
+          description: "WKT LINESTRING de la geometria de la ruta (nulo si no tiene)"
+
+    ReplaceRouteStopsRequest:
+      type: object
+      required: [stops]
+      properties:
+        stops:
+          type: array
+          items:
+            type: object
+            required: [stop_id, sequence]
+            properties:
+              stop_id:
+                type: integer
+                format: int32
+                description: ID de la parada
+              sequence:
+                type: integer
+                description: Posicion en el recorrido
+
+    ReplaceRouteStopsResponse:
+      type: object
+      properties:
+        route_id:
+          type: integer
+          format: int32
+        stops_count:
+          type: integer
+
+    UpdateRouteShapeRequest:
+      type: object
+      required: [geom_wkt]
+      properties:
+        geom_wkt:
+          type: string
+          description: "WKT LINESTRING, ej: LINESTRING(lon1 lat1, lon2 lat2, ...)"
+
+    UpdateRouteShapeResponse:
+      type: object
+      properties:
+        route_id:
+          type: integer
+          format: int32
+        shape_updated:
+          type: boolean
+
+    # --- Admin: Vehiculos ---
     CreateVehicleRequest:
       type: object
       required: [plate_number]
