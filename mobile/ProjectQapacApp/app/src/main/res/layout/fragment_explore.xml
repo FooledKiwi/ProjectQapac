@@ -58,29 +58,24 @@
         app:behavior_peekHeight="120dp"
         app:behavior_hideable="false">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
         <View
             android:layout_width="40dp"
             android:layout_height="4dp"
             android:layout_gravity="center_horizontal"
-            />
+            android:background="@color/purple" />
 
-        <include
+        <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+            <include
             android:id="@+id/layoutNoRoute"
             layout="@layout/ly_no_route_selected"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="visible" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvRoutes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false" />
 
         <LinearLayout
             android:id="@+id/layoutStopInfo"
@@ -89,12 +84,17 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <include
-                layout="@layout/ly_stop" />
+            <include layout="@layout/ly_stop" />
 
         </LinearLayout>
 
-            </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRoutes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false" />
+
+    </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 

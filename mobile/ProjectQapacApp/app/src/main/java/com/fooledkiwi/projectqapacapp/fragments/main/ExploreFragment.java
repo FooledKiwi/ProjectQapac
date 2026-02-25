@@ -38,10 +38,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import android.graphics.Color;
@@ -79,6 +81,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private final List<Route> routeList = new ArrayList<>();
     private final Map<Integer, RouteDetail> routeDetailCache = new HashMap<>();
     private Polyline currentRoutePolyline = null;
+    private BottomSheetBehavior<View> bottomSheetBehavior;
 
     public ExploreFragment() {
         // Required empty public constructor
@@ -119,6 +122,8 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         layoutNoRoute.setVisibility(View.VISIBLE);
         layoutStopInfo.setVisibility(View.GONE);
 
+        bottomSheetBehavior = BottomSheetBehavior.from(view.findViewById(R.id.ll_bottom_sheet));
+
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             layoutNoPermission.setVisibility(View.VISIBLE);
@@ -138,6 +143,10 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         routeAdapter = new RouteAdapter(routeList);
         rvRoutes.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvRoutes.setAdapter(routeAdapter);
+        routeAdapter.setOnRouteClickListener(route -> {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            drawRoutePolylineById(route.getId());
+        });
 
         FloatingActionButton fabSearch = view.findViewById(R.id.fabSearch);
         fabSearch.setOnClickListener(v -> fetchNearbyStops());
@@ -331,7 +340,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
                     tvEtaSeconds.setText(formatEta(detail.getEtaSeconds()));
                     layoutNoRoute.setVisibility(View.GONE);
                     layoutStopInfo.setVisibility(View.VISIBLE);
-                    drawRoutePolylineForStop(stop.getId());
+
                 } else {
                     Toast.makeText(requireContext(),
                             "Error al obtener detalle: " + response.code(),
@@ -349,10 +358,62 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
-    /**
-     * Finds which cached RouteDetail contains the given stop id, then draws its
-     * shape_polyline (WKT LINESTRING) on the map. Clears any previously drawn route polyline.
-     */
+    private void drawRoutePolylineById(int routeId) {
+        RouteDetail cached = routeDetailCache.get(routeId);
+        if (cached != null) {
+            applyRoutePolyline(cached);
+            return;
+        }
+        ApiClient.getRoutesService().getRouteById(routeId).enqueue(new Callback<RouteDetail>() {
+            @Override
+            public void onResponse(@NonNull Call<RouteDetail> call,
+                                   @NonNull Response<RouteDetail> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    routeDetailCache.put(routeId, response.body());
+                    applyRoutePolyline(response.body());
+                } else {
+                    Toast.makeText(requireContext(),
+                            "Error al cargar ruta: " + response.code(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<RouteDetail> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(),
+                        "Error de red: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+    private void applyRoutePolyline(RouteDetail detail) {
+        if (map == null || detail.getShapePolyline() == null) return;
+
+        List<LatLng> points = parseWktLinestring(detail.getShapePolyline());
+        if (points.isEmpty()) return;
+
+        if (currentRoutePolyline != null) {
+            currentRoutePolyline.remove();
+            currentRoutePolyline = null;
+        }
+
+        currentRoutePolyline = map.addPolyline(new PolylineOptions()
+                .addAll(points)
+                .width(8f)
+                .color(Color.parseColor("#FF6200EE"))
+                .geodesic(true));
+
+        LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
+        for (LatLng point : points) {
+            boundsBuilder.include(point);
+        }
+        map.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 80));
+    }
+
     private void drawRoutePolylineForStop(long stopId) {
         if (map == null) return;
         RouteDetail matched = null;
@@ -367,29 +428,16 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             if (matched != null) break;
         }
 
-        // Clear previous polyline regardless of whether we found a new one
         if (currentRoutePolyline != null) {
             currentRoutePolyline.remove();
             currentRoutePolyline = null;
         }
 
-        if (matched == null || matched.getShapePolyline() == null) return;
-
-        List<LatLng> points = parseWktLinestring(matched.getShapePolyline());
-        if (points.isEmpty()) return;
-
-        currentRoutePolyline = map.addPolyline(new PolylineOptions()
-                .addAll(points)
-                .width(8f)
-                .color(Color.parseColor("#FF6200EE"))  // purple
-                .geodesic(true));
+        if (matched != null) {
+            applyRoutePolyline(matched);
+        }
     }
 
-    /**
-     * Parses a WKT LINESTRING into a list of LatLng points.
-     * Expected format: "LINESTRING(lon1 lat1, lon2 lat2, ...)"
-     * Note: WKT uses (longitude latitude) order, but LatLng is (lat, lon).
-     */
     private List<LatLng> parseWktLinestring(String wkt) {
         List<LatLng> points = new ArrayList<>();
         try {
