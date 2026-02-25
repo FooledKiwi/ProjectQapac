@@ -8,7 +8,7 @@
     tools:context=".activities.FirstTimeActivity">
 
     <LinearLayout
-        app:layout_constraintBottom_toBottomOf="@id/btn_guest"
+        app:layout_constraintBottom_toBottomOf="@id/btn_login"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/imageView"
@@ -16,40 +16,29 @@
         android:layout_height="wrap_content"
 
         android:orientation="vertical">
-        <com.google.android.material.button.MaterialButton
-            android:textColor="@color/white"
-            app:icon="@drawable/icon_register"
-            app:iconGravity="textStart"
-            app:iconTint="@color/white"
-            android:id="@+id/btn_register"
-            android:layout_width="250dp"
-            android:layout_height="63dp"
-            android:onClick="registerBtn"
-            android:text="@string/register"
-             />
 
         <com.google.android.material.button.MaterialButton
             app:iconTint="@color/black"
             app:icon="@drawable/icon_login"
             app:iconGravity="textStart"
-            android:id="@+id/btn_login"
+            android:id="@+id/btn_guest"
             style="@style/AppButton2"
             android:layout_width="250dp"
             android:layout_height="61dp"
-            android:onClick="loginBtn"
-            android:text="@string/login"
+            android:onClick="enterAsGuest"
+            android:text="@string/enter"
             />
 
     </LinearLayout>
 
     <Button
-        android:id="@+id/btn_guest"
+        android:id="@+id/btn_login"
         style="@style/Widget.AppCompat.Button.Borderless"
         android:layout_width="244dp"
         android:layout_height="60dp"
         android:layout_marginBottom="64dp"
-        android:onClick="enterAsGuest"
-        android:text="@string/guest"
+        android:onClick="loginBtn"
+        android:text="@string/im_driver"
         android:textColor="?attr/colorOnSurface"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

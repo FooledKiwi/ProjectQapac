@@ -76,7 +76,7 @@ public class AuthLoginFragment extends Fragment {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
 
-        /*
+
         LoginRequest request = new LoginRequest(username, password);
         ApiClient.getAuthService().login(request).enqueue(new Callback<LoginResponse>() {
             @Override
@@ -115,8 +115,7 @@ public class AuthLoginFragment extends Fragment {
                         getString(R.string.error_network),
                         Toast.LENGTH_LONG).show();
             }
-        });*/
-
+        });
     }
 
     private void setLoading(Button button, ProgressBar progressBar, boolean isLoading) {

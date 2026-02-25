@@ -118,8 +118,8 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             })
         );
 
-        //FloatingActionButton fabSearch = view.findViewById(R.id.fabSearch);
-        //fabSearch.setOnClickListener(v -> fetchNearbyStops());
+        FloatingActionButton fabSearch = view.findViewById(R.id.fabSearch);
+        fabSearch.setOnClickListener(v -> fetchNearbyStops());
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -128,6 +128,8 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
+
+        fetchNearbyStops();
     }
 
     @Override
@@ -144,26 +146,6 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
             onStopMarkerClick(marker);
             return true;
         });
-
-        //Todo esto es para probar
-        Stop test = new Stop(0, "Parada insana", -7.165005036051442f, -78.49572883907857f);
-        Stop t2 = new Stop(1, "Cruce o y q se", -7.165879291507253f, -78.50892986119936f);
-
-        List<Stop> stops = new ArrayList<>();
-        stops.add(test);
-        stops.add(t2);
-        stops.forEach(this::addStopMarker);
-
-        map.addPolyline(new PolylineOptions()
-                .add(new LatLng(test.getLat(), test.getLon()))
-                .add(new LatLng(t2.getLat(), t2.getLon()))
-                .width(10f)
-                .color(Color.BLUE)
-                .clickable(true));
-
-        map.setOnPolylineClickListener(polyline ->
-                Toast.makeText(requireContext(), "click en ruta", Toast.LENGTH_SHORT).show()
-        );
     }
 
     private void fetchNearbyStops() {

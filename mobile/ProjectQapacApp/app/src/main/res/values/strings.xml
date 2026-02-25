@@ -71,4 +71,6 @@
     <string name="txt_no_permission_subtitle">La aplicación necesita acceso a tu ubicación para mostrarte el mapa correctamente</string>
     <string name="txt_no_permission_button">Permitir acceso a ubicación</string>
     <string name="txt_account">Cuenta</string>
+    <string name="enter">Ingresar</string>
+    <string name="im_driver">Soy conductor</string>
 </resources>

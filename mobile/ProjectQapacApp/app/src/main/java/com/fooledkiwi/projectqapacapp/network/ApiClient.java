@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
     // Cambia esta URL por la dirección real de tu servidor cuando esté disponible
-    private static final String BASE_URL = "https://example.com/";
+    private static final String BASE_URL = "https://qapac.cloud.dominux.work/";
     private static Retrofit retrofit = null;
     public static Retrofit getClient() {
         if (retrofit == null) {
