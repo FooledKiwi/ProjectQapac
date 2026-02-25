@@ -13,10 +13,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -77,7 +74,6 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
     private TextView tvLabelVehicle;
     private TextView tvEtaSeconds;
     private TextView tvCurrentLocation;
-    private ActivityResultLauncher<String[]> requestPermissionLauncher;
 
     private final List<Marker> stopMarkers = new ArrayList<>();
     private final List<Marker> vehicleMarkers = new ArrayList<>();
@@ -96,21 +92,6 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
 
     public ExploreFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        requestPermissionLauncher = registerForActivityResult(
-            new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                Boolean fineGranted = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
-                if (fineGranted != null && fineGranted) {
-                    layoutNoPermission.setVisibility(View.GONE);
-                    setMapGesturesEnabled(true);
-                    enableMyLocation();
-                }
-            });
     }
 
     @Override
@@ -143,12 +124,7 @@ public class ExploreFragment extends Fragment implements OnMapReadyCallback {
         }
 
         Button btnRequestPermission = view.findViewById(R.id.btnRequestPermission);
-        btnRequestPermission.setOnClickListener(v ->
-            requestPermissionLauncher.launch(new String[]{
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            })
-        );
+        // El permiso se solicita desde FirstTimeActivity; el botón queda como indicador visual
 
         rvRoutes = view.findViewById(R.id.rvRoutes);
         routeAdapter = new RouteAdapter(routeList);

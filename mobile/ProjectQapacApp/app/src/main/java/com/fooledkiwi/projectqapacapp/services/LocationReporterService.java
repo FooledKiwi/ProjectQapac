@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.fooledkiwi.projectqapacapp.R;
+import com.fooledkiwi.projectqapacapp.activities.AuthActivity;
 import com.fooledkiwi.projectqapacapp.models.DriverPositionRequest;
 import com.fooledkiwi.projectqapacapp.network.ApiClient;
 import com.fooledkiwi.projectqapacapp.session.SessionManager;
@@ -48,7 +49,7 @@ public class LocationReporterService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (!sessionManager.isLoggedIn()) {
-            stopSelf();
+            redirectToAuthAndStop();
             return START_NOT_STICKY;
         }
 
@@ -57,7 +58,7 @@ public class LocationReporterService extends Service {
             @Override
             public void run() {
                 if (!sessionManager.isLoggedIn()) {
-                    stopSelf();
+                    redirectToAuthAndStop();
                     return;
                 }
                 reportCurrentPosition();
@@ -94,8 +95,8 @@ public class LocationReporterService extends Service {
                                     public void onResponse(@NonNull Call<Void> call,
                                                            @NonNull Response<Void> response) {
                                         if (response.code() == 401 || response.code() == 403) {
-                                            Log.w(TAG, "Token invalido (" + response.code() + "), deteniendo servicio");
-                                            stopSelf();
+                                            Log.w(TAG, "Token invalido (" + response.code() + "), redirigiendo a auth");
+                                            redirectToAuthAndStop();
                                         } else {
                                             Log.d(TAG, "Posicion reportada: "
                                                     + location.getLatitude() + ", "
@@ -115,6 +116,14 @@ public class LocationReporterService extends Service {
             Log.e(TAG, "Permiso de ubicacion no concedido: " + e.getMessage());
             stopSelf();
         }
+    }
+
+    private void redirectToAuthAndStop() {
+        sessionManager.clearSession();
+        Intent intent = new Intent(this, AuthActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        stopSelf();
     }
 
     @Override
