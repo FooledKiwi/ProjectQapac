@@ -22,6 +22,11 @@ public class FirstTimeActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<String[]> locationPermissionLauncher;
 
+    // Destino pendiente mientras se espera la respuesta del permiso.
+    // "main" → MainActivity, "auth" → AuthActivity (pendingAction lleva "login"/"register")
+    private String pendingDestination = null;
+    private String pendingAction      = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,13 +39,23 @@ public class FirstTimeActivity extends AppCompatActivity {
         });
 
         locationPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestMultiplePermissions(), result -> {});
+                new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                    Boolean fine   = result.get(Manifest.permission.ACCESS_FINE_LOCATION);
+                    Boolean coarse = result.get(Manifest.permission.ACCESS_COARSE_LOCATION);
+                    boolean granted = (fine != null && fine) || (coarse != null && coarse);
+
+                    if (granted && pendingDestination != null) {
+                        executePendingNavigation();
+                    }
+                    // Si denegado: no navegar, el usuario queda en FirstTimeActivity.
+                    pendingDestination = null;
+                    pendingAction      = null;
+                });
 
         // Si el usuario ya tiene sesión activa, ir directo a MainActivity
         SessionManager session = new SessionManager(this);
         if (session.isLoggedIn()) {
             gotoMain();
-            finish();
         }
     }
 
@@ -57,26 +72,51 @@ public class FirstTimeActivity extends AppCompatActivity {
     }
 
     public void gotoAuth(String action) {
-        Intent intent = new Intent(this, AuthActivity.class);
-        intent.putExtra("TAB_POS", action);
-        requestLocationPermissionIfNeeded();
-        startActivity(intent);
-
-    }
-
-    public void gotoMain() {
-        Intent intent = new Intent(this, MainActivity.class);
-        requestLocationPermissionIfNeeded();
-        startActivity(intent);
-    }
-
-    private void requestLocationPermissionIfNeeded() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (hasLocationPermission()) {
+            startActivity(buildAuthIntent(action));
+        } else {
+            pendingDestination = "auth";
+            pendingAction      = action;
             locationPermissionLauncher.launch(new String[]{
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
             });
+        }
+    }
+
+    public void gotoMain() {
+        if (hasLocationPermission()) {
+            startActivity(new Intent(this, MainActivity.class));
+        } else {
+            pendingDestination = "main";
+            pendingAction      = null;
+            locationPermissionLauncher.launch(new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            });
+        }
+    }
+
+    // -------------------------------------------------------------------------
+
+    private boolean hasLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private Intent buildAuthIntent(String action) {
+        Intent intent = new Intent(this, AuthActivity.class);
+        intent.putExtra("TAB_POS", action);
+        return intent;
+    }
+
+    private void executePendingNavigation() {
+        if ("auth".equals(pendingDestination)) {
+            startActivity(buildAuthIntent(pendingAction));
+        } else if ("main".equals(pendingDestination)) {
+            startActivity(new Intent(this, MainActivity.class));
         }
     }
 }
